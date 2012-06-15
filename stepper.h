@@ -49,4 +49,8 @@ void st_cycle_reinitialize();
 // Initiates a feed hold of the running program
 void st_feed_hold();
 
+// Processor cycles per step event used in the simulator.
+// Accessor function to keep st struct static
+double get_cycles_per_step_event();
+
 #endif

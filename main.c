@@ -29,6 +29,7 @@
 #include "motion_control.h"
 #include "gcode.h"
 #include "protocol.h"
+#include "runtime.h"
 #include "limits.h"
 #include "settings.h"
 #include "serial.h"

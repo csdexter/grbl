@@ -32,6 +32,7 @@
 #include "settings.h"
 #include "config.h"
 #include "protocol.h"
+#include "runtime.h"
 
 // The number of linear motions that can be in the plan at any give time
 #define BLOCK_BUFFER_SIZE 18
@@ -336,7 +337,7 @@ uint8_t plan_check_full_buffer()
 void plan_synchronize()
 {
   while (plan_get_current_block() || sys.cycle_start) { 
-    protocol_execute_runtime();   // Check and execute run-time commands
+    execute_runtime();   // Check and execute run-time commands
     if (sys.abort) { return; } // Check for system abort
   }    
 }

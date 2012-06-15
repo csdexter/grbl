@@ -32,6 +32,7 @@
 #include "planner.h"
 #include "limits.h"
 #include "protocol.h"
+#include "runtime.h"
 
 // Execute linear motion in absolute millimeter coordinates. Feed rate given in millimeters/second
 // unless invert_feed_rate is true. Then the feed_rate means that the motion should be completed in
@@ -56,7 +57,7 @@ void mc_line(double x, double y, double z, double feed_rate, uint8_t invert_feed
   // If the buffer is full: good! That means we are well ahead of the robot. 
   // Remain in this loop until there is room in the buffer.
   do {
-    protocol_execute_runtime(); // Check for any run-time commands
+    execute_runtime(); // Check for any run-time commands
     if (sys.abort) { return; } // Bail, if system abort.
   } while ( plan_check_full_buffer() );  
   plan_buffer_line(x, y, z, feed_rate, invert_feed_rate);
@@ -185,7 +186,7 @@ void mc_dwell(double seconds)
    delay_ms(floor(1000*seconds-i*DWELL_TIME_STEP)); // Delay millisecond remainder
    while (i-- > 0) {
      // NOTE: Check and execute runtime commands during dwell every <= DWELL_TIME_STEP milliseconds.
-     protocol_execute_runtime();
+     execute_runtime();
      if (sys.abort) { return; }
      _delay_ms(DWELL_TIME_STEP); // Delay DWELL_TIME_STEP increment
    }

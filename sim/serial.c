@@ -22,20 +22,21 @@
 /* This code was initially inspired by the wiring_serial module by David A. Mellis which
    used to be a part of the Arduino project. */ 
 
-#ifndef serial_h
-#define serial_h
+#include "../serial.h"
+#include <stdio.h>
+#include "sim_control.h"
 
-#include <inttypes.h>
+void serial_write(uint8_t data) {
+  printBlock();
+  putchar(data);
+  runtime_second_call= 0;
+}
 
-#define SERIAL_NO_DATA 0xff
 
-void serial_init(long baud);
-
-void serial_write(uint8_t data);
-
-uint8_t serial_read();
-
-// Reset and empty data in read buffer. Used by e-stop and reset.
-void serial_reset_read_buffer();
-
-#endif
+uint8_t serial_read() {
+  int c;
+  if((c = fgetc(stdin)) != EOF)
+    return c;
+    
+  return SERIAL_NO_DATA;
+}

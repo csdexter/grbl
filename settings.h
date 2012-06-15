@@ -45,6 +45,9 @@ typedef struct {
 } settings_t;
 extern settings_t settings;
 
+// Reset settings to default values
+void settings_reset();
+
 // Initialize the configuration subsystem (load settings from EEPROM)
 void settings_init();
 

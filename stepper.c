@@ -422,4 +422,6 @@ void st_cycle_reinitialize()
   sys.feed_hold = false; // Release feed hold. Cycle is ready to re-start.
 }
 
-
+double get_cycles_per_step_event() {
+  return (double)st.cycles_per_step_event;
+}
