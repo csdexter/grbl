@@ -1,7 +1,32 @@
+/*
+  interrupt.h - replacement for the avr include of the same name to provide
+  dummy register variables and macros
+
+  Part of Grbl Simulator
+
+  Copyright (c) 2012 Jens Geisler
+
+  Grbl is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  Grbl is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+
 #ifndef interrupt_h
 #define interrupt_h
+
 #include <inttypes.h>
 
+// dummy register variables
 extern uint8_t timsk1;
 extern uint8_t timsk2;
 extern uint8_t tcnt2;
@@ -11,11 +36,14 @@ extern uint8_t tccr1b;
 extern uint8_t tccr1a;
 extern uint8_t ocr1a;
 
+// macros to turn avr interrupts into regular functions
 #define TIMER1_COMPA_vect
 #define ISR(a) void interrupt_ ## a ()
 
+// enable interrupts does nothing in the simulation environment
 void sei();
 
+// dummy macros for interrupt related registers
 #define TIMSK1 timsk1
 #define TIMSK2 timsk2
 #define OCR1A ocr1a

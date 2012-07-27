@@ -62,7 +62,7 @@ int main(void)
       // releases will auto-reset the machine position back to [0,0,0] if an abort is used while 
       // grbl is moving the machine.
       int32_t last_position[3];
-      double last_coord_system[N_COORDINATE_SYSTEM][3];
+      float last_coord_system[N_COORDINATE_SYSTEM][3];
       memcpy(last_position, sys.position, sizeof(sys.position)); // last_position[] = sys.position[]
       memcpy(last_coord_system, sys.coord_system, sizeof(sys.coord_system)); // last_coord_system[] = sys.coord_system[]
 
@@ -92,7 +92,7 @@ int main(void)
       // TODO: Install G20/G21 unit default into settings and load appropriate settings.
     }
     
-    protocol_execute_runtime();
+    execute_runtime();
     protocol_process(); // ... process the serial protocol
     
   }

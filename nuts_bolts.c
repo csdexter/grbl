@@ -24,12 +24,12 @@
 #include <stdlib.h>
 #include <util/delay.h>
 
-int read_double(char *line, uint8_t *char_counter, double *double_ptr)                  
+int read_float(char *line, uint8_t *char_counter, float *float_ptr)                  
 {
   char *start = line + *char_counter;
   char *end;
   
-  *double_ptr = strtod(start, &end);
+  *float_ptr = strtod(start, &end);
   if(end == start) { 
     return(false); 
   };

@@ -1,9 +1,11 @@
 /*
-  serial.c - Low level functions for sending and recieving bytes via the serial port
-  Part of Grbl
+  serial.c - replacement for the modul of the same name in grbl
+    Make sure the simulator reads from stdin and writes to stdout.
+    Also print info about the last buffered block.
 
-  Copyright (c) 2009-2011 Simen Svale Skogsrud
-  Copyright (c) 2011-2012 Sungeun K. Jeon
+  Part of Grbl Simulator
+
+  Copyright (c) 2012 Jens Geisler
 
   Grbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,16 +21,16 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* This code was initially inspired by the wiring_serial module by David A. Mellis which
-   used to be a part of the Arduino project. */ 
-
 #include "../serial.h"
 #include <stdio.h>
-#include "sim_control.h"
+#include "simulator.h"
+#include <stdio.h>
 
 void serial_write(uint8_t data) {
   printBlock();
   putchar(data);
+
+  // Indicate the end of processing a command. See simulator.c for details
   runtime_second_call= 0;
 }
 

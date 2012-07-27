@@ -1,27 +1,26 @@
-// This file has been prepared for Doxygen automatic documentation generation.
-/*! \file ********************************************************************
-*
-* Atmel Corporation
-*
-* \li File:               eeprom.c
-* \li Compiler:           IAR EWAAVR 3.10c
-* \li Support mail:       avr@atmel.com
-*
-* \li Supported devices:  All devices with split EEPROM erase/write
-*                         capabilities can be used.
-*                         The example is written for ATmega48.
-*
-* \li AppNote:            AVR103 - Using the EEPROM Programming Modes.
-*
-* \li Description:        Example on how to use the split EEPROM erase/write
-*                         capabilities in e.g. ATmega48. All EEPROM
-*                         programming modes are tested, i.e. Erase+Write,
-*                         Erase-only and Write-only.
-*
-*                         $Revision: 1.6 $
-*                         $Date: Friday, February 11, 2005 07:16:44 UTC $
-****************************************************************************/
+/*
+  eeprom.c - replacement for the avr library of the same name to provide
+  dummy functions
 
+  Part of Grbl Simulator
+
+  Copyright (c) 2012 Jens Geisler
+
+  Grbl is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  Grbl is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+// These are never called in the simulator
 unsigned char eeprom_get_char( unsigned int addr ) {
   return 0;
 }

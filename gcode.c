@@ -75,8 +75,8 @@ typedef struct {
   uint8_t absolute_mode;           // 0 = relative motion, 1 = absolute motion {G90, G91}
   uint8_t program_flow;            // {M0, M1, M2, M30}
   int8_t spindle_direction;        // 1 = CW, -1 = CCW, 0 = Stop {M3, M4, M5}
-  double feed_rate, seek_rate;     // Millimeters/second
-  double position[3];              // Where the interpreter considers the tool to be at this point in the code
+  float feed_rate, seek_rate;     // Millimeters/second
+  float position[3];              // Where the interpreter considers the tool to be at this point in the code
   uint8_t tool;
   int16_t spindle_speed;           // RPM/100
   uint8_t plane_axis_0, 
@@ -87,7 +87,7 @@ static parser_state_t gc;
 
 #define FAIL(status) gc.status_code = status;
 
-static int next_statement(char *letter, double *double_ptr, char *line, uint8_t *char_counter);
+static int next_statement(char *letter, float *float_ptr, char *line, uint8_t *char_counter);
 
 static void select_plane(uint8_t axis_0, uint8_t axis_1, uint8_t axis_2) 
 {
@@ -112,7 +112,7 @@ void gc_set_current_position(int32_t x, int32_t y, int32_t z)
   gc.position[Z_AXIS] = z/settings.steps_per_mm[Z_AXIS]; 
 }
 
-static float to_millimeters(double value) 
+static float to_millimeters(float value) 
 {
   return(gc.inches_mode ? (value * MM_PER_INCH) : value);
 }
@@ -125,17 +125,17 @@ uint8_t gc_execute_line(char *line)
 {
   uint8_t char_counter = 0;  
   char letter;
-  double value;
+  float value;
   int int_value;
   
   uint16_t modal_group_words = 0;  // Bitflag variable to track and check modal group words in block
   uint8_t axis_words = 0;          // Bitflag to track which XYZ(ABC) parameters exist in block
 
-  double inverse_feed_rate = -1; // negative inverse_feed_rate means no inverse_feed_rate specified
+  float inverse_feed_rate = -1; // negative inverse_feed_rate means no inverse_feed_rate specified
   uint8_t absolute_override = false; // true(1) = absolute motion for this block only {G53}
   uint8_t non_modal_action = NON_MODAL_NONE; // Tracks the actions of modal group 0 (non-modal)
   
-  double target[3], offset[3];  
+  float target[3], offset[3];  
   clear_vector(target); // XYZ(ABC) axes parameters.
   clear_vector(offset); // IJK Arc offsets are incremental. Value of zero indicates no change.
     
@@ -235,7 +235,7 @@ uint8_t gc_execute_line(char *line)
   /* Pass 2: Parameters. All units converted according to current block commands. Position 
      parameters are converted and flagged to indicate a change. These can have multiple connotations
      for different commands. Each will be converted to their proper value upon execution. */
-  double p = 0, r = 0;
+  float p = 0, r = 0;
   uint8_t l = 0;
   char_counter = 0;
   while(next_statement(&letter, &value, line, &char_counter)) {
@@ -459,11 +459,11 @@ uint8_t gc_execute_line(char *line)
             */
             
             // Calculate the change in position along each selected axis
-            double x = target[gc.plane_axis_0]-gc.position[gc.plane_axis_0];
-            double y = target[gc.plane_axis_1]-gc.position[gc.plane_axis_1];
+            float x = target[gc.plane_axis_0]-gc.position[gc.plane_axis_0];
+            float y = target[gc.plane_axis_1]-gc.position[gc.plane_axis_1];
             
             clear_vector(offset);
-            double h_x2_div_d = -sqrt(4 * r*r - x*x - y*y)/hypot(x,y); // == -(h * 2 / d)
+            float h_x2_div_d = -sqrt(4 * r*r - x*x - y*y)/hypot(x,y); // == -(h * 2 / d)
             // If r is smaller than d, the arc is now traversing the complex plane beyond the reach of any
             // real CNC, and thus - for practical reasons - we will terminate promptly:
             if(isnan(h_x2_div_d)) { FAIL(STATUS_FLOATING_POINT_ERROR); return(gc.status_code); }
@@ -521,7 +521,7 @@ uint8_t gc_execute_line(char *line)
     // As far as the parser is concerned, the position is now == target. In reality the
     // motion control system might still be processing the action and the real tool position
     // in any intermediate location.
-    memcpy(gc.position, target, sizeof(double)*3); // gc.position[] = target[];
+    memcpy(gc.position, target, sizeof(float)*3); // gc.position[] = target[];
   }
   
   // M0,M1,M2,M30: Perform non-running program flow actions. During a program pause, the buffer may 
@@ -541,7 +541,7 @@ uint8_t gc_execute_line(char *line)
 // Parses the next statement and leaves the counter on the first character following
 // the statement. Returns 1 if there was a statements, 0 if end of string was reached
 // or there was an error (check state.status_code).
-static int next_statement(char *letter, double *double_ptr, char *line, uint8_t *char_counter) 
+static int next_statement(char *letter, float *float_ptr, char *line, uint8_t *char_counter) 
 {
   if (line[*char_counter] == 0) {
     return(0); // No more statements
@@ -553,7 +553,7 @@ static int next_statement(char *letter, double *double_ptr, char *line, uint8_t 
     return(0);
   }
   (*char_counter)++;
-  if (!read_double(line, char_counter, double_ptr)) {
+  if (!read_float(line, char_counter, float_ptr)) {
     FAIL(STATUS_BAD_NUMBER_FORMAT); 
     return(0);
   };

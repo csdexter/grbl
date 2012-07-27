@@ -1,9 +1,12 @@
 /*
-  protocol.c - the serial protocol master control unit
-  Part of Grbl
+  runtime.c - replacement for the modul of the same name in grbl
+    Run time commands are not processed in the simulator.
+    Instead, the execute_runtime() is used as a hook to handle stepper simulation
+    and printing of simulation results.
 
-  Copyright (c) 2009-2011 Simen Svale Skogsrud
-  Copyright (c) 2011-2012 Sungeun K. Jeon  
+  Part of Grbl Simulator
+
+  Copyright (c) 2012 Jens Geisler
 
   Grbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,81 +22,11 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// #include <avr/io.h>
-// #include <inttypes.h>
-// #include "../protocol.h"
-// #include "../gcode.h"
-// #include "../serial.h"
-// #include "../print.h"
-// #include "../settings.h"
-// #include "../config.h"
-// #include <math.h>
-// #include "../nuts_bolts.h"
-// #include <avr/pgmspace.h>
-// #include "../stepper.h"
-#include "../planner.h"
-#include "sim_control.h"
-#include "simstepper.h"
-// #include "simstepper.h"
-#include <stdio.h>
+#include "simulator.h"
 
-int runtime_second_call= 0;
-extern FILE *block_out_file;
-extern FILE *step_out_file;
-
-// replacement for original execute_runtime as a hook to record blocks as they are generated
+// replacement for original execute_runtime as a hook to print blocks as they are generated
 // and to control simulation of buffered blocks
 void execute_runtime() {
   printBlock();
   handle_buffer();
-}
-
-void printBlock() {
-  #define printBlockField(format, field) fprintf(block_out_file, # field ": " # format "\n", b->field)
-  block_t *b;
-  static block_t *last_block= NULL;
-  
-  b= plan_get_current_block();
-  if(b!=last_block && b!=NULL) {
-    fprintf(block_out_file,"  block: ");
-    if(b->direction_bits & (1<<X_DIRECTION_BIT)) fprintf(block_out_file,"-");
-    fprintf(block_out_file,"%d, ", b->steps_x);
-    if(b->direction_bits & (1<<Y_DIRECTION_BIT)) fprintf(block_out_file,"-");
-    fprintf(block_out_file,"%d, ", b->steps_y);
-    if(b->direction_bits & (1<<Z_DIRECTION_BIT)) fprintf(block_out_file,"-");
-    fprintf(block_out_file,"%d, ", b->steps_z);
-    fprintf(block_out_file,"%f", b->nominal_speed);
-    fprintf(block_out_file,"\n");
-    // printBlockField(%d,  direction_bits);            // The direction bit set for this block (refers to *_DIRECTION_BIT in config.h)
-    /*printBlockField(%d, steps_x);
-    printBlockField(%d, steps_y);
-    printBlockField(%d, steps_z);
-    printBlockField(%d, step_event_count);          // The number of step events required to complete this block
-
-    // Fields used by the motion planner to manage acceleration
-    printBlockField(%f, nominal_speed);               // The nominal speed for this block in mm/min  
-    printBlockField(%f, entry_speed);                 // Entry speed at previous-current block junction in mm/min
-    printBlockField(%f, max_entry_speed);             // Maximum allowable junction entry speed in mm/min
-    printBlockField(%f, millimeters);                 // The total travel of this block in mm
-    printBlockField(%d, recalculate_flag);           // Planner flag to recalculate trapezoids on entry junction
-    printBlockField(%d, nominal_length_flag);        // Planner flag for nominal speed always reached
-
-    // Settings for the trapezoid generator
-    printBlockField(%d, initial_rate);              // The step rate at start of block  
-    printBlockField(%d, final_rate);                // The step rate at end of block
-    printBlockField(%d, rate_delta);                 // The steps/minute to add or subtract when changing speed (must be positive)
-    printBlockField(%d, accelerate_until);          // The index of the step event on which to stop acceleration
-    printBlockField(%d, decelerate_after);          // The index of the step event on which to start decelerating
-    printBlockField(%d, nominal_rate);              // The nominal step rate for this block in step_events/minute
-    fprintf(block_out_file,"\n");*/
-    last_block= b;
-  }
-}
-
-void handle_buffer() {
-  if(plan_check_full_buffer() || runtime_second_call) {
-    sim_stepper(step_out_file);
-  } else {
-    runtime_second_call= 1;
-  }
 }

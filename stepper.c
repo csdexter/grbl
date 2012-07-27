@@ -422,6 +422,9 @@ void st_cycle_reinitialize()
   sys.feed_hold = false; // Release feed hold. Cycle is ready to re-start.
 }
 
-double get_cycles_per_step_event() {
-  return (double)st.cycles_per_step_event;
+// This is a mere accessor function to keep the st struct static
+// It returns the current stepper step time for the simulator.
+// That's why it returns a true double value
+double get_step_time() {
+  return (double)st.cycles_per_step_event/F_CPU;
 }
