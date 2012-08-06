@@ -1,12 +1,15 @@
 * remove inversion support for STEP pins, maybe #define it out (though no LPT-driven controllers out there need it)
 * decouple DIRECTION from STEP, there's no need (performance or otherwise) for them to be glued together
 * UN-BUG limits.c toggle stuff (does not work in the rare case that STEP lines have been inverted). #define it out.
+* remove obsolete TODOs
+* replace if (sys.abort) { return; } with a function or macro; also investigate if the "sprinkled calls" model should be maintained (process_runtime_command()).
 --
 * switch to better math (faster and smaller): use fixed point. Maybe copy stuff over from Teacup (like auto-scaling).
 * switch to better math (faster and smaller): use homebrewed routines for sin/cos/tan/hypot etc.
 --
 * maybe add SPINDLE_RPM stuff (PWM)
 * maybe add E_STOP stuff (freeze)
+* maybe un-snafu serial.c and eeprom.c -- they look thrown together in a hurry
 --
 * more G-code stuff
 --
