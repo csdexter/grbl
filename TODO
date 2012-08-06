@@ -1,0 +1,14 @@
+* remove inversion support for STEP pins, maybe #define it out (though no LPT-driven controllers out there need it)
+* decouple DIRECTION from STEP, there's no need (performance or otherwise) for them to be glued together
+* UN-BUG limits.c toggle stuff (does not work in the rare case that STEP lines have been inverted). #define it out.
+--
+* switch to better math (faster and smaller): use fixed point. Maybe copy stuff over from Teacup (like auto-scaling).
+* switch to better math (faster and smaller): use homebrewed routines for sin/cos/tan/hypot etc.
+--
+* maybe add SPINDLE_RPM stuff (PWM)
+* maybe add E_STOP stuff (freeze)
+--
+* more G-code stuff
+--
+* make a first attempt at splitting along the dotted line
+* make Arduino-compatible (add .ino file, investigate why it complains about duplicate symbols in serial, #define them out)
