@@ -95,14 +95,14 @@ static void homing_cycle(bool x_axis, bool y_axis, bool z_axis, bool reverse_dir
 // going one, i.e. the one with the least resolution, thus X makes a good
 // candidate
 #define FEEDRATE_TO_PERIOD_US(f) \
-  ((60.0 / ((f) * settings.steps_per_mm[X_AXIS])) * 1000000.0)
+  ((60.0 / ((f) * settings.steps_per_mm[X_AXIS])) * 1000000)
 
 static void approach_limit_switch(bool x, bool y, bool z) {
-  homing_cycle(x, y, z, false, FEEDRATE_TO_PERIOD_US(settings.default_seek_rate));
+  homing_cycle(x, y, z, false, FEEDRATE_TO_PERIOD_US(settings.default_seek_rate) + 25); // Make it a bit slower, until we change this to the proper way (i.e. with acceleration)
 }
 
 static void leave_limit_switch(bool x, bool y, bool z) {
-  homing_cycle(x, y, z, true, FEEDRATE_TO_PERIOD_US(settings.default_feed_rate));
+  homing_cycle(x, y, z, true, FEEDRATE_TO_PERIOD_US(settings.default_feed_rate) - 25); // Make this a bit faster
 }
 
 void limits_go_home() {
