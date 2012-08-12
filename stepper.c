@@ -19,8 +19,7 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* The timer calculations of this module informed by the 'RepRap cartesian firmware' by Zack Smith
-   and Philipp Tiefenbacher. */
+/* The timer calculations of this module informed by the 'RepRap cartesian firmware' by Zack Smith and Philipp Tiefenbacher. */
 
 #include "stepper.h"
 #include "config.h"
@@ -113,12 +112,13 @@ void st_go_idle()
 {
   // Disable stepper driver interrupt
   TIMSK1 &= ~(1<<OCIE1A); 
-  // Force stepper dwell to lock axes for a defined amount of time to ensure the axes come to a complete
-  // stop and not drift from residual inertial forces at the end of the last movement.
-  #if STEPPER_IDLE_LOCK_TIME > 0
-    _delay_ms(STEPPER_IDLE_LOCK_TIME);   
-  #endif
+
   #ifdef STEPPERS_DISABLE
+    // Force stepper dwell to lock axes for a defined amount of time to ensure the axes come to a complete
+    // stop and not drift from residual inertial forces at the end of the last movement.
+    #if STEPPER_IDLE_LOCK_TIME > 0
+      _delay_ms(STEPPER_IDLE_LOCK_TIME);   
+    #endif
     // Disable steppers by setting stepper disable
     STEPPERS_DISABLE_PORT |= (1<<STEPPERS_DISABLE_BIT);
   #endif

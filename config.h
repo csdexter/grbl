@@ -22,31 +22,53 @@
 #ifndef config_h
 #define config_h
 
-// IMPORTANT: Any changes here requires a full re-compiling of the source code to propagate them.
 
-#define BAUD_RATE 9600
+/* PIN ASSIGNMENTS begin ----------- */
 
-// Define pin-assignments
+// Define pin-assignments for stepper movement (by default they are taken to be
+// active-high, edge [i.e. the motors will move one step on the rising edge];
+// see settings.c for how to invert them if your hardware setup requires it as
+// well as how to control the minimum pulse width to match what your controller
+// can take) 
 #define STEPPING_PORT      PORTC
 #define STEPPING_PIN       PINC
 #define X_STEP_BIT         0  // Uno Analog Pin 0
 #define Y_STEP_BIT         1  // Uno Analog Pin 1
 #define Z_STEP_BIT         2  // Uno Analog Pin 2
+
+// Define pin-assignments for stepper direction (by default they are taken to be
+// true logic, level [i.e. 0 is CW and causes the axis to move towards zero and
+// 1 is CCW and causes the axis to move away from zero -- according to the
+// standard axis directions used in machining]; see settings.c for how to invert
+// them if your hardware setup requires them and STEP_PULSE_DELAY below for
+// matching your controller's time constraints)
+#define DIRECTION_PORT     PORTC
 #define X_DIRECTION_BIT    3  // Uno Analog Pin 3
 #define Y_DIRECTION_BIT    4  // Uno Analog Pin 4
 #define Z_DIRECTION_BIT    5  // Uno Analog Pin 5
 
 // Uncomment the next line to enable support for a Stepper Power On/Off control
 // line, for drivers that have/use one.
+// Please note that disabling this will also disable STEPPER_IDLE_LOCK_TIME
+// below since we cannot lock the steppers if we have no control over their
+// active status
 //#define STEPPERS_DISABLE
 #define STEPPERS_DISABLE_PORT   PORTB
 #define STEPPERS_DISABLE_BIT    0  // Uno Digital Pin 8
 
+// Define pin-assignments for endstop switches (by default they are taken to be
+// active-low, level [i.e. they transition from 1 to 0 when the machine hits the
+// limit and stay 0 while the machine is in the limit area]; see settings.c for
+// how to invert them if your hardware setup requires it)
+// Please see below for topology support (i.e. where are the switches installed
+// on your machine) and hard/soft limits
 #define LIMIT_PIN     PIND
 #define X_LIMIT_BIT   2  // Uno Digital Pin 2
 #define Y_LIMIT_BIT   3  // Uno Digital Pin 3
 #define Z_LIMIT_BIT   4  // Uno Digital Pin 4
 
+// Define pin-assignments for spindle control (this is always active-high, level
+// [i.e. 1 causes the spindle to start and run until 0 is output])
 #define SPINDLE_ENABLE_PORT PORTD
 #define SPINDLE_ENABLE_BIT 5  // Uno Digital Pin 5
 
@@ -61,7 +83,8 @@
 #define CHARGE_PUMP_BIT 6 // Uno Digital Pin 6, for reference only, not configurable
 
 // Uncomment the next line to enable support for a Spindle Direction (CW or CCW)
-// control line, for drivers that have/use one.
+// control line, for drivers that have/use one (this is always true logic, level
+// [i.e. 1 is CW and 0 is CCW])
 //#define SPINDLE_DIRECTION
 #define SPINDLE_DIRECTION_PORT PORTD
 #define SPINDLE_DIRECTION_BIT 7  // Uno Digital Pin 7
@@ -78,6 +101,39 @@
 // Useful bit for the above
 #define SETUP_IO() DDRB = PORTB_DIRECTIONS; DDRC = PORTC_DIRECTIONS; \
   DDRD = PORTD_DIRECTIONS
+
+/* PIN ASSIGNMENTS end ------------- */
+
+// Machine limits topology options
+// Define LIMIT_HARD if you want to be able to sense hardware endstops and use
+// them for calibrating the machine. Define LIMIT_SOFT if you want to keep track
+// of the machine's position in software and assume the limit is hit if the
+// machine reaches a certain coordinate.
+// All _VALUEs are in mm and represent maximum machine travel as seen from
+// G-code [e.g. if you declare a 100mm axis as [-50, 50] and then try to move to
+// 55, you'll get an error since the code will think you're trying to go beyond
+// the limits].
+// Please note the current implementation supports at most 3 limit switches, at
+// most one per axis.
+#define LIMIT_HARD // Support for hardware endswitches
+#define LIMIT_SOFT // Support for software enforced limits
+#define LIMIT_TYPE_SOFT 0
+#define LIMIT_TYPE_HARD 1
+#define X_LIMIT_NEG_TYPE LIMIT_TYPE_SOFT
+#define X_LIMIT_NEG_VALUE 0.0
+#define X_LIMIT_POS_TYPE LIMIT_TYPE_HARD
+#define X_LIMIT_POS_VALUE 720.0
+#define Y_LIMIT_NEG_TYPE LIMIT_TYPE_SOFT
+#define Y_LIMIT_NEG_VALUE 0.0
+#define Y_LIMIT_POS_TYPE LIMIT_TYPE_HARD
+#define Y_LIMIT_POS_VALUE 420.0
+#define Z_LIMIT_NEG_TYPE LIMIT_TYPE_SOFT
+#define Z_LIMIT_NEG_VALUE 0.0
+#define Z_LIMIT_POS_TYPE LIMIT_TYPE_HARD
+#define Z_LIMIT_POS_VALUE 110.0
+
+// Serial port baud rate (mode is always 8-N-1; flow control is XON/XOFF if enabled below or none otherwise)
+#define BAUD_RATE 9600
 
 // Define runtime command special characters. These characters are 'picked-off' directly from the
 // serial read data stream and are not passed to the grbl line execution parser. Select characters
