@@ -53,6 +53,9 @@
 							<tool id="de.innot.avreclipse.tool.avrdude.app.debug.1045735152" name="AVRDude" superClass="de.innot.avreclipse.tool.avrdude.app.debug"/>
 						</toolChain>
 					</folderInfo>
+					<sourceEntries>
+						<entry excluding="host" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -96,7 +99,7 @@
 								<option id="de.innot.avreclipse.linker.option.libs.800161055" name="Libraries (-l)" superClass="de.innot.avreclipse.linker.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="m"/>
 								</option>
-								<option id="de.innot.avreclipse.linker.option.otherlinkargs.131139036" superClass="de.innot.avreclipse.linker.option.otherlinkargs" value="-Os" valueType="string"/>
+								<option id="de.innot.avreclipse.linker.option.otherlinkargs.131139036" name="Other Arguments" superClass="de.innot.avreclipse.linker.option.otherlinkargs" value="-Os" valueType="string"/>
 								<inputType id="de.innot.avreclipse.tool.linker.input.586544168" name="OBJ Files" superClass="de.innot.avreclipse.tool.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -111,6 +114,9 @@
 							<tool id="de.innot.avreclipse.tool.avrdude.app.release.2014274246" name="AVRDude" superClass="de.innot.avreclipse.tool.avrdude.app.release"/>
 						</toolChain>
 					</folderInfo>
+					<sourceEntries>
+						<entry excluding="host" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>

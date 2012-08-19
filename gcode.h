@@ -22,7 +22,8 @@
 
 #ifndef gcode_h
 #define gcode_h
-#include <avr/io.h>
+
+#include <stdint.h>
 
 // Initialize the parser
 void gc_init();
