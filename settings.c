@@ -94,26 +94,28 @@ void settings_dump() {
 uint8_t settings_execute_line(char *line) {
   uint8_t char_counter = 1;
   double parameter, value;
+
   if(line[0] != '$') { 
-    return(STATUS_UNSUPPORTED_STATEMENT); 
+    return (STATUS_UNSUPPORTED_STATEMENT);
   }
-  if(line[char_counter] == 0) { 
-    settings_dump(); return(STATUS_OK); 
+  if(!line[char_counter]) {
+    settings_dump();
+    return (STATUS_OK);
   }
   if(!read_double(line, &char_counter, &parameter)) {
-    return(STATUS_BAD_NUMBER_FORMAT);
+    return (STATUS_BAD_NUMBER_FORMAT);
   };
   if(line[char_counter++] != '=') { 
-    return(STATUS_UNSUPPORTED_STATEMENT); 
+    return (STATUS_UNSUPPORTED_STATEMENT);
   }
   if(!read_double(line, &char_counter, &value)) {
-    return(STATUS_BAD_NUMBER_FORMAT);
+    return (STATUS_BAD_NUMBER_FORMAT);
   }
   if(line[char_counter] != 0) { 
-    return(STATUS_UNSUPPORTED_STATEMENT); 
+    return (STATUS_UNSUPPORTED_STATEMENT);
   }
   settings_store_setting(parameter, value);
-  return(STATUS_OK);
+  return (STATUS_OK);
 }
 
 void write_settings() {

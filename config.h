@@ -40,7 +40,7 @@
 // true logic, level [i.e. 0 is CW and causes the axis to move towards zero and
 // 1 is CCW and causes the axis to move away from zero -- according to the
 // standard axis directions used in machining]; see settings.c for how to invert
-// them if your hardware setup requires them and STEP_PULSE_DELAY below for
+// them if your hardware setup requires it and STEP_PULSE_DELAY below for
 // matching your controller's time constraints)
 #define DIRECTION_PORT     PORTC
 #define X_DIRECTION_BIT    3  // Uno Analog Pin 3
@@ -84,7 +84,7 @@
 
 // Uncomment the next line to enable support for a Spindle Direction (CW or CCW)
 // control line, for drivers that have/use one (this is always true logic, level
-// [i.e. 1 is CW and 0 is CCW])
+// [i.e. 0 is CW and 1 is CCW])
 //#define SPINDLE_DIRECTION
 #define SPINDLE_DIRECTION_PORT PORTD
 #define SPINDLE_DIRECTION_BIT 7  // Uno Digital Pin 7
@@ -115,6 +115,8 @@
 // the limits].
 // Please note the current implementation supports at most 3 limit switches, at
 // most one per axis.
+// Please note that configuring for no endstops on any axis means the code will
+// have no means to recalibrate that axis.
 #define LIMIT_HARD // Support for hardware endswitches
 #define LIMIT_SOFT // Support for software enforced limits
 #define LIMIT_TYPE_SOFT 0
@@ -157,6 +159,8 @@
 // grbl has no way to know this has happened, since stepper motors are open-loop control. Depending
 // on the machine, this parameter may need to be larger or smaller than the default time.
 // NOTE: If set to zero, the delay will not be compiled.
+// NOTE: If the current hardware configuration doesn't have a means to switch stepper motor power
+//       on and off (i.e. STEPPER_DISABLE is NOT #defined), the delay is also not compiled.
 #define STEPPER_IDLE_LOCK_TIME 25 // (milliseconds) - Integer > 0
 
 // The temporal resolution of the acceleration management subsystem. Higher number give smoother
@@ -238,13 +242,6 @@
   #define DECIMAL_PLACES 2  // mm-mode
   #define DECIMAL_MULTIPLIER 100
 #endif
-
-//  Limit step rate for homing
-#define LIMIT_STEP_RATE 1  	// (mm/min)
-
-// Debounce delay is the time delay the controller waits for a "good" signal from the limit switch.
-// A delay of 3ms to 5ms is a good starting value.
-#define LIMIT_DEBOUNCE_DELAY 5 // (milliseconds)
 
 
 #endif
