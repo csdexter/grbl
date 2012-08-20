@@ -43,7 +43,5 @@ void protocol_process();
 // Executes one line of input according to protocol
 uint8_t protocol_execute_line(char *line);
 
-// Checks and executes a runtime command at various stop points in main program
-void protocol_execute_runtime();
 
 #endif

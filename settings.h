@@ -4,7 +4,7 @@
 
   Copyright (c) 2009-2011 Simen Svale Skogsrud
   Copyright (c) 2011 Sungeun K. Jeon
-  
+
   Grbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
@@ -33,18 +33,21 @@
 
 // Current global settings (persisted in EEPROM from byte 1 onwards)
 typedef struct {
-  double steps_per_mm[3];
+  float steps_per_mm[3];
   uint8_t microsteps;
   uint8_t pulse_microseconds;
-  double default_feed_rate;
-  double default_seek_rate;
+  float default_feed_rate;
+  float default_seek_rate;
   uint8_t invert_mask_stepdir;
   uint8_t invert_mask_limit;
-  double mm_per_arc_segment;
-  double acceleration;
-  double junction_deviation;
+  float mm_per_arc_segment;
+  float acceleration;
+  float junction_deviation;
 } settings_t;
 extern settings_t settings;
+
+// Reset settings to default values
+void settings_reset();
 
 // Initialize the configuration subsystem (load settings from EEPROM)
 void settings_init();
@@ -56,6 +59,6 @@ void settings_dump();
 uint8_t settings_execute_line(char *line);
 
 // A helper method to set new settings from command line
-void settings_store_setting(int parameter, double value);
+void settings_store_setting(int parameter, float value);
 
 #endif

@@ -1,9 +1,12 @@
 /*
-  serial.c - Low level functions for sending and recieving bytes via the serial port
-  Part of Grbl
+  runtime.c - replacement for the modul of the same name in grbl
+    Run time commands are not processed in the simulator.
+    Instead, the execute_runtime() is used as a hook to handle stepper simulation
+    and printing of simulation results.
 
-  Copyright (c) 2009-2011 Simen Svale Skogsrud
-  Copyright (c) 2011-2012 Sungeun K. Jeon
+  Part of Grbl Simulator
+
+  Copyright (c) 2012 Jens Geisler
 
   Grbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,23 +22,11 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* This code was initially inspired by the wiring_serial module by David A. Mellis which
-   used to be a part of the Arduino project. */ 
+#include "simulator.h"
 
-#ifndef serial_h
-#define serial_h
-
-#include <inttypes.h>
-
-#define SERIAL_NO_DATA 0xff
-
-void serial_init(long baud);
-
-void serial_write(uint8_t data);
-
-uint8_t serial_read();
-
-// Reset and empty data in read buffer. Used by e-stop and reset.
-void serial_reset_read_buffer();
-
-#endif
+// replacement for original execute_runtime as a hook to print blocks as they are generated
+// and to control simulation of buffered blocks
+void execute_runtime() {
+  printBlock();
+  handle_buffer();
+}

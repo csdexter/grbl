@@ -47,4 +47,8 @@ void st_cycle_reinitialize();
 // Initiates a feed hold of the running program
 void st_feed_hold();
 
+// Time between step events used in the simulator.
+// Accessor function to keep st struct static
+double get_step_time();
+
 #endif

@@ -4,7 +4,7 @@
 
   Copyright (c) 2009-2011 Simen Svale Skogsrud
   Copyright (c) 2011-2012 Sungeun K. Jeon
-  
+
   Grbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
@@ -451,4 +451,11 @@ void st_cycle_reinitialize()
     st.step_events_completed = 0;
   }
   sys.feed_hold = false; // Release feed hold. Cycle is ready to re-start.
+}
+
+// This is a mere accessor function to keep the st struct static
+// It returns the current stepper step time for the simulator.
+// That's why it returns a true double value
+double get_step_time() {
+  return (double)st.cycles_per_step_event/F_CPU;
 }
