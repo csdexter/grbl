@@ -1,0 +1,56 @@
+#  Part of Grbl
+#
+#  Copyright (c) 2012 Radu - Eosif Mihailescu
+#
+#  Grbl is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  Grbl is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
+
+
+# This Makefile is meant for compiling grbl with the host's GCC for debugging
+# and analysis purposes.
+# You should at least check the settings for
+# OBJECTS ...... The object files created from your source files. This list is
+#                usually the same as the list of source files with suffix ".o".
+
+OBJECTS    = main.o motion_control.o gcode.o spindle_control.o serial.o protocol.o stepper.o \
+             eeprom.o settings.o planner.o nuts_bolts.o limits.o print.o cpump.o host/host.o
+COMPILE = gcc -Wall -g -Os -I. -ffunction-sections -fdata-sections -funsigned-bitfields
+OBJDUMP = objdump
+
+.PHONY: all clean
+
+# symbolic targets:
+all:	grbl
+
+.c.o:
+	$(COMPILE) -c $< -o $@ 
+
+.S.o:
+	$(COMPILE) -c $< -o $@
+
+.c.S:
+	$(COMPILE) -S $< -o $@
+
+clean:
+	rm -f grbl $(OBJECTS)
+
+functionsbysize: $(OBJECTS)
+	@$(OBJDUMP) -h $^ | grep '\.text\.' | perl -ne '/\.text\.(\S+)\s+([0-9a-f]+)/ && printf "%u\t%s\n", eval("0x$$2"), $$1;' | sort -n
+
+# file targets:
+grbl: $(OBJECTS)
+	$(COMPILE) -o grbl $(OBJECTS) -lm -Wl,--gc-sections -Wl,-Map,$@.map -Wl,--as-needed
+	size grbl
+
+grbl.S: grbl
+	$(OBJDUMP) -S $< > $@
