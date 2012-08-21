@@ -18,10 +18,13 @@
   You should have received a copy of the GNU General Public License
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef runtime_h
 #define runtime_h
 
+
 // Checks and executes a runtime command at various stop points in main program
 void execute_runtime();
+
 
 #endif

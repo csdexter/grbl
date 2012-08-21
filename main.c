@@ -19,24 +19,29 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <avr/interrupt.h>
-#include <avr/pgmspace.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+
+
 #include "config.h"
-#include "planner.h"
-#include "nuts_bolts.h"
-#include "stepper.h"
-#include "spindle_control.h"
-#include "motion_control.h"
+
+#include "cpump.h"
 #include "gcode.h"
+#include "limits.h"
+#include "nuts_bolts.h"
+#include "planner.h"
 #include "protocol.h"
 #include "runtime.h"
-#include "limits.h"
-#include "settings.h"
 #include "serial.h"
-#include "cpump.h"
+#include "settings.h"
+#include "spindle_control.h"
+#include "stepper.h"
+
 
 // Declare system global variable structure
 system_t sys; 
+
 
 int main(void)
 {
@@ -44,7 +49,7 @@ int main(void)
   serial_init(BAUD_RATE); // Setup serial baud rate and interrupts
   SETUP_IO(); // Setup pin directions globally
   st_init(); // Setup stepper pins and interrupt timers
-  sei(); // Enable interrupts
+  host_sei(); // Enable interrupts
 
   memset(&sys, 0, sizeof(sys));  // Clear all system variables
   sys.abort = true;   // Set abort to complete initialization

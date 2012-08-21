@@ -21,14 +21,15 @@
 #ifndef limits_h
 #define limits_h
 
-#include <avr/io.h>
+#include "nuts_bolts.h"
 
-#define LIMIT_MASK (_BV(X_LIMIT_BIT) | _BV(Y_LIMIT_BIT) | _BV(Z_LIMIT_BIT)) // All limit bits
+#define LIMIT_MASK (bit(X_LIMIT_BIT) | bit(Y_LIMIT_BIT) | bit(Z_LIMIT_BIT)) // All limit bits
 
 // initialize the limits module
 void limits_init();
 
 // perform the homing cycle
 void limits_go_home();
+
 
 #endif

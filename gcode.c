@@ -22,16 +22,20 @@
 /* This code is inspired by the Arduino GCode Interpreter by Mike Ellery and the NIST RS274/NGC Interpreter
    by Kramer, Proctor and Messina. */
 
-#include "gcode.h"
-#include <string.h>
-#include "nuts_bolts.h"
 #include <math.h>
-#include "settings.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+
+#include "config.h"
+
 #include "motion_control.h"
-#include "spindle_control.h"
-#include "errno.h"
-#include "protocol.h"
+#include "nuts_bolts.h"
 #include "planner.h"
+#include "protocol.h"
+#include "settings.h"
+#include "spindle_control.h"
+
 
 // Define modal group internal numbers for checking multiple command violations and tracking the 
 // type of command that is called in the block. A modal group is a group of g-code commands that are

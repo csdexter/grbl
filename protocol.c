@@ -19,7 +19,20 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <avr/io.h>
+#include <stdbool.h>
+
+#include "config.h"
+
+#include "protocol.h"
+
+#include "gcode.h"
+#include "nuts_bolts.h"
+#include "print.h"
+#include "runtime.h"
+#include "serial.h"
+#include "settings.h"
+
+/*#include <avr/io.h>
 #include <inttypes.h>
 #include "protocol.h"
 #include "gcode.h"
@@ -32,7 +45,8 @@
 #include <avr/pgmspace.h>
 #include "stepper.h"
 #include "planner.h"
-#include "runtime.h"
+#include "runtime.h"*/
+
 
 #define LINE_BUFFER_SIZE 50
 
@@ -43,25 +57,25 @@ static uint8_t iscomment; // Comment/block delete flag for processor to ignore c
 static void status_message(int status_code) 
 {
   if (status_code == 0) {
-    printPgmString(PSTR("ok\r\n"));
+    printPgmString(_S("ok\r\n"));
   } else {
-    printPgmString(PSTR("error: "));
+    printPgmString(_S("error: "));
     switch(status_code) {          
       case STATUS_BAD_NUMBER_FORMAT:
-      printPgmString(PSTR("Bad number format\r\n")); break;
+      printPgmString(_S("Bad number format\r\n")); break;
       case STATUS_EXPECTED_COMMAND_LETTER:
-      printPgmString(PSTR("Expected command letter\r\n")); break;
+      printPgmString(_S("Expected command letter\r\n")); break;
       case STATUS_UNSUPPORTED_STATEMENT:
-      printPgmString(PSTR("Unsupported statement\r\n")); break;
+      printPgmString(_S("Unsupported statement\r\n")); break;
       case STATUS_FLOATING_POINT_ERROR:
-      printPgmString(PSTR("Floating point error\r\n")); break;
+      printPgmString(_S("Floating point error\r\n")); break;
       case STATUS_MODAL_GROUP_VIOLATION:
-      printPgmString(PSTR("Modal group violation\r\n")); break;
+      printPgmString(_S("Modal group violation\r\n")); break;
       case STATUS_INVALID_COMMAND:
-      printPgmString(PSTR("Invalid command\r\n")); break;
+      printPgmString(_S("Invalid command\r\n")); break;
       default:
       printInteger(status_code);
-      printPgmString(PSTR("\r\n"));
+      printPgmString(_S("\r\n"));
     }
   }
 }
@@ -69,8 +83,8 @@ static void status_message(int status_code)
 void protocol_init() 
 {
   // Print grbl initialization message
-  printPgmString(PSTR("\r\nGrbl " GRBL_VERSION));
-  printPgmString(PSTR("\r\n'$' to dump current settings\r\n"));
+  printPgmString(_S("\r\nGrbl " GRBL_VERSION));
+  printPgmString(_S("\r\n'$' to dump current settings\r\n"));
 
   char_counter = 0; // Reset line input
   iscomment = false;

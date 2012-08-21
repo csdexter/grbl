@@ -19,16 +19,19 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "spindle_control.h"
-#include "settings.h"
-#include "motion_control.h"
-#include "config.h"
-#include "planner.h"
-#include "stepper.h"
-
 #include <stdint.h>
 
+#include "config.h"
+
+#include "planner.h"
+
+
 static uint8_t current_direction;
+
+void spindle_stop()
+{
+  SPINDLE_ENABLE_PORT &= ~(1<<SPINDLE_ENABLE_BIT);
+}
 
 void spindle_init()
 {
@@ -36,11 +39,6 @@ void spindle_init()
   // SPINDLE_ENABLE and SPINDLE_DIRECTION set as outputs by SETUP_IO() in
   // config.h called from main()
   spindle_stop();
-}
-
-void spindle_stop()
-{
-  SPINDLE_ENABLE_PORT &= ~(1<<SPINDLE_ENABLE_BIT);
 }
 
 void spindle_run(int direction, uint32_t rpm) 

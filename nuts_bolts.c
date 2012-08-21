@@ -19,10 +19,11 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "nuts_bolts.h"
-#include <stdint.h>
+#include <stdbool.h>
 #include <stdlib.h>
-#include <util/delay.h>
+
+#include "config.h"
+
 
 int read_float(char *line, uint8_t *char_counter, float *float_ptr)                  
 {
@@ -36,18 +37,4 @@ int read_float(char *line, uint8_t *char_counter, float *float_ptr)
 
   *char_counter = end - line;
   return(true);
-}
-
-// Delays variable defined milliseconds. Compiler compatibility fix for _delay_ms(),
-// which only accepts constants in future compiler releases.
-void delay_ms(uint16_t ms) 
-{
-  while ( ms-- ) { _delay_ms(1); }
-}
-
-// Delays variable defined microseconds. Compiler compatibility fix for _delay_us(),
-// which only accepts constants in future compiler releases.
-void delay_us(uint16_t us) 
-{
-  while ( us-- ) { _delay_us(1); }
 }

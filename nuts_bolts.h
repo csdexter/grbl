@@ -22,13 +22,8 @@
 #ifndef nuts_bolts_h
 #define nuts_bolts_h
 
-#include <string.h>
 #include <stdint.h>
-#include <stdbool.h>
-#include "config.h"
 
-#define false 0
-#define true 1
 
 #define X_AXIS 0
 #define Y_AXIS 1
@@ -89,10 +84,5 @@ extern system_t sys;
 // a pointer to the result variable. Returns true when it succeeds
 int read_float(char *line, uint8_t *char_counter, float *float_ptr);
 
-// Delays variable-defined milliseconds. Compiler compatibility fix for _delay_ms().
-void delay_ms(uint16_t ms);
-
-// Delays variable-defined microseconds. Compiler compatibility fix for _delay_us().
-void delay_us(uint16_t us);
 
 #endif

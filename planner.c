@@ -22,17 +22,19 @@
 
 /* The ring buffer implementation gleaned from the wiring_serial library by David A. Mellis. */
 
-#include <inttypes.h>
-#include <math.h>       
+#include <math.h>
+#include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "config.h"
 
 #include "planner.h"
+
 #include "nuts_bolts.h"
-#include "stepper.h"
-#include "settings.h"
-#include "config.h"
-#include "protocol.h"
 #include "runtime.h"
+#include "settings.h"
+
 
 // The number of linear motions that can be in the plan at any give time
 #define BLOCK_BUFFER_SIZE 18

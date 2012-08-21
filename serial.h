@@ -25,7 +25,8 @@
 #ifndef serial_h
 #define serial_h
 
-#include <inttypes.h>
+#include <stdint.h>
+
 
 #define SERIAL_NO_DATA 0xff
 
@@ -37,5 +38,6 @@ uint8_t serial_read();
 
 // Reset and empty data in read buffer. Used by e-stop and reset.
 void serial_reset_read_buffer();
+
 
 #endif

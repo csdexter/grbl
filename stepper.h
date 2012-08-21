@@ -22,11 +22,12 @@
 #ifndef stepper_h
 #define stepper_h 
 
-#include <avr/io.h>
+#include "nuts_bolts.h"
+
 
 // Some useful constants
-#define STEP_MASK (_BV(X_STEP_BIT) | _BV(Y_STEP_BIT) | _BV(Z_STEP_BIT)) // All step bits
-#define DIRECTION_MASK (_BV(X_DIRECTION_BIT) | _BV(Y_DIRECTION_BIT) | _BV(Z_DIRECTION_BIT)) // All direction bits
+#define STEP_MASK (bit(X_STEP_BIT) | bit(Y_STEP_BIT) | bit(Z_STEP_BIT)) // All step bits
+#define DIRECTION_MASK (bit(X_DIRECTION_BIT) | bit(Y_DIRECTION_BIT) | bit(Z_DIRECTION_BIT)) // All direction bits
 #define STEPPING_MASK (STEP_MASK | DIRECTION_MASK) // All stepping-related bits (step/direction)
 
 // Initialize and setup the stepper motor subsystem
@@ -50,5 +51,6 @@ void st_feed_hold();
 // Time between step events used in the simulator.
 // Accessor function to keep st struct static
 double get_step_time();
+
 
 #endif

@@ -19,11 +19,16 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <stdbool.h>
+#include <string.h>
+
+#include "config.h"
+
 #include "nuts_bolts.h"
-#include "stepper.h"
-#include "settings.h"
-#include "runtime.h"
 #include "print.h"
+#include "settings.h"
+#include "stepper.h"
+
 
 void runtime_status_report()
 {

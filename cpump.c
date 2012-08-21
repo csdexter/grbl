@@ -21,10 +21,12 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <avr/io.h>
+
 #include "config.h"
+
 #include "cpump.h"
 
-#include <avr/io.h>
 
 void cpump_init()
 {

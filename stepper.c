@@ -21,25 +21,25 @@
 
 /* The timer calculations of this module informed by the 'RepRap cartesian firmware' by Zack Smith and Philipp Tiefenbacher. */
 
-#include "stepper.h"
+#include <stdbool.h>
+#include <string.h>
+
 #include "config.h"
-#include "settings.h"
-#include <math.h>
-#include <stdlib.h>
-#include <util/delay.h>
-#include "nuts_bolts.h"
-#include <avr/interrupt.h>
+
+#include "stepper.h"
+
 #include "planner.h"
-#include "limits.h"
+#include "settings.h"
+
 
 // Some useful constants
-#define TICKS_PER_MICROSECOND (F_CPU/1000000)
-#define CYCLES_PER_ACCELERATION_TICK ((TICKS_PER_MICROSECOND*1000000)/ACCELERATION_TICKS_PER_SECOND)
+#define TICKS_PER_MICROSECOND (F_CPU / 1000000)
+#define CYCLES_PER_ACCELERATION_TICK ((TICKS_PER_MICROSECOND * 1000000) / ACCELERATION_TICKS_PER_SECOND)
 
 // Stepper state variable. Contains running data and trapezoid variables.
 typedef struct {
-  // Used by the bresenham line algorithm
-  int32_t counter_x,        // Counter variables for the bresenham line tracer
+  // Used by Bresenham's line algorithm
+  int32_t counter_x,        // Counter variables for Bresenham's line tracer
           counter_y, 
           counter_z;
   uint32_t event_count;
@@ -117,7 +117,7 @@ void st_go_idle()
     // Force stepper dwell to lock axes for a defined amount of time to ensure the axes come to a complete
     // stop and not drift from residual inertial forces at the end of the last movement.
     #if STEPPER_IDLE_LOCK_TIME > 0
-      _delay_ms(STEPPER_IDLE_LOCK_TIME);   
+      host_delay_ms(STEPPER_IDLE_LOCK_TIME);
     #endif
     // Disable steppers by setting stepper disable
     STEPPERS_DISABLE_PORT |= (1<<STEPPERS_DISABLE_BIT);
@@ -141,7 +141,7 @@ inline static uint8_t iterate_trapezoid_cycle_counter()
 // "The Stepper Driver Interrupt" - This timer interrupt is the workhorse of Grbl. It is executed at the rate set with
 // config_step_timer. It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately. 
 // It is supported by The Stepper Port Reset Interrupt which it uses to reset the stepper port after each pulse. 
-// The bresenham line tracer algorithm controls all three stepper outputs simultaneously with these two interrupts.
+// The Bresenham line tracer algorithm controls all three stepper outputs simultaneously with these two interrupts.
 ISR(TIMER1_COMPA_vect)
 {
   if (busy) { return; } // The busy-flag is used to avoid reentering this interrupt

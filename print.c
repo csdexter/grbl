@@ -22,22 +22,20 @@
 /* This code was initially inspired by the wiring_serial module by David A. Mellis which
    used to be a part of the Arduino project. */ 
 
-
-#include <math.h>
-#include <avr/pgmspace.h>
 #include "config.h"
+
 #include "serial.h"
 
-void printString(const char *s)
-{
+
+void printString(const char *s) {
   while (*s)
     serial_write(*s++);
 }
 
 // Print a string stored in PGM-memory
-void printPgmString(const char *s)
-{
+void printPgmString(const char *s) {
   char c;
+
   while ((c = pgm_read_byte_near(s++)))
     serial_write(c);
 }

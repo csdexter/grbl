@@ -22,12 +22,12 @@
 #ifndef planner_h
 #define planner_h
                  
-#include <inttypes.h>
+#include <stdint.h>
+
 
 // This struct is used when buffering the setup for each linear movement "nominal" values are as specified in 
 // the source g-code and may never actually be reached if acceleration management is active.
 typedef struct {
-
   // Fields used by the bresenham algorithm for tracing the line
   uint8_t  direction_bits;            // The direction bit set for this block (refers to *_DIRECTION_BIT in config.h)
   uint32_t steps_x, steps_y, steps_z; // Step count along each axis
@@ -48,7 +48,6 @@ typedef struct {
   uint32_t accelerate_until;          // The index of the step event on which to stop acceleration
   uint32_t decelerate_after;          // The index of the step event on which to start decelerating
   uint32_t nominal_rate;              // The nominal step rate for this block in step_events/minute
-
 } block_t;
       
 // Initialize the motion plan subsystem      
@@ -82,5 +81,6 @@ uint8_t plan_check_full_buffer();
 
 // Block until all buffered steps are executed
 void plan_synchronize();
+
 
 #endif

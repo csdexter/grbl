@@ -20,19 +20,18 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <avr/io.h>
-#include "settings.h"
-#include "config.h"
-#include "motion_control.h"
-#include <util/delay.h>
 #include <math.h>
-#include <stdlib.h>
-#include "nuts_bolts.h"
-#include "stepper.h"
-#include "planner.h"
+#include <stdint.h>
+
+#include "config.h"
+
 #include "limits.h"
-#include "protocol.h"
+#include "nuts_bolts.h"
+#include "planner.h"
 #include "runtime.h"
+#include "settings.h"
+#include "stepper.h"
+
 
 // Execute linear motion in absolute millimeter coordinates. Feed rate given in millimeters/second
 // unless invert_feed_rate is true. Then the feed_rate means that the motion should be completed in
@@ -181,14 +180,14 @@ void mc_arc(float *position, float *target, float *offset, uint8_t axis_0, uint8
 // Execute dwell in seconds.
 void mc_dwell(float seconds) 
 {
-   uint16_t i = floor(1000/DWELL_TIME_STEP*seconds);
+   uint16_t i = floor(1000 / DWELL_TIME_STEP * seconds);
    plan_synchronize();
-   delay_ms(floor(1000*seconds-i*DWELL_TIME_STEP)); // Delay millisecond remainder
-   while (i-- > 0) {
+   host_delay_ms(floor(1000 * seconds - i * DWELL_TIME_STEP)); // Delay millisecond remainder
+   while (i--) {
      // NOTE: Check and execute runtime commands during dwell every <= DWELL_TIME_STEP milliseconds.
      execute_runtime();
      if (sys.abort) { return; }
-     _delay_ms(DWELL_TIME_STEP); // Delay DWELL_TIME_STEP increment
+     host_delay_ms(DWELL_TIME_STEP); // Delay DWELL_TIME_STEP increment
    }
 }
 

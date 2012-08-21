@@ -17,16 +17,19 @@
   You should have received a copy of the GNU General Public License
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
-  
-#include <util/delay.h>
-#include <avr/io.h>
-#include "stepper.h"
-#include "limits.h"
-#include "settings.h"
-#include "nuts_bolts.h"
+
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "config.h"
-#include "motion_control.h"
+
+#include "limits.h"
+
+#include "nuts_bolts.h"
 #include "planner.h"
+#include "settings.h"
+#include "stepper.h"
+
 
 void limits_init() {
   // I/O lines as inputs done by SETUP_IO() in config.h called from main()
@@ -83,9 +86,9 @@ static void homing_cycle(bool x_axis, bool y_axis, bool z_axis, bool reverse_dir
     // Send stepping pulse, can't use |= because we may have 1 -> 0 transitions,
     // e.g. when the STEP lines are inverted
     STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | (out_bits & STEP_MASK);
-    delay_us(settings.pulse_microseconds);
+    host_delay_us(settings.pulse_microseconds);
     STEPPING_PIN = (out_bits & STEP_MASK); // End pulse via toggle, saves one port access
-    delay_us(step_delay);
+    host_delay_us(step_delay);
   }
   return;
 }

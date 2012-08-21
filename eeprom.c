@@ -1,3 +1,9 @@
+//TODO: this file is in need of a *serious* facelift, as follows below:
+//TODO: replace proprietary code with open-source one
+//TODO: replace homegrown checksum with avr-libc crc
+//TODO: make the API not suck (why have both put_char and memcpy?)
+//TODO: make the API portable (other architectures may have multiple NVS locations), especially since it's only called from settings.c
+
 // This file has been prepared for Doxygen automatic documentation generation.
 /*! \file ********************************************************************
 *

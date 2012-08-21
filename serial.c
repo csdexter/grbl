@@ -22,14 +22,15 @@
 /* This code was initially inspired by the wiring_serial module by David A. Mellis which
    used to be a part of the Arduino project. */ 
 
-#include <avr/interrupt.h>
-#include <avr/sleep.h>
-#include "serial.h"
+
 #include "config.h"
-#include "stepper.h"
-#include "spindle_control.h"
+
+#include "serial.h"
+
 #include "nuts_bolts.h"
-#include "protocol.h"
+#include "spindle_control.h"
+#include "stepper.h"
+
 
 #define RX_BUFFER_SIZE 128
 #define TX_BUFFER_SIZE 64
@@ -55,8 +56,7 @@ volatile uint8_t tx_buffer_tail = 0;
   
   // Returns the number of bytes in the RX buffer. This replaces a typical byte counter to prevent
   // the interrupt and main programs from writing to the counter at the same time.
-  static uint8_t get_rx_buffer_count()
-  {
+  static uint8_t get_rx_buffer_count() {
     if (rx_buffer_head == rx_buffer_tail) { return(0); }
     if (rx_buffer_head < rx_buffer_tail) { return(rx_buffer_tail-rx_buffer_head); }
     return (RX_BUFFER_SIZE - (rx_buffer_head-rx_buffer_tail));
@@ -73,7 +73,7 @@ void serial_init(long baud)
 {
   set_baud_rate(baud);
   
-  /* baud doubler off  - Only needed on Uno XXX */
+  /* baud doubler off  - Only needed on Uno */
   UCSR0A &= ~(1 << U2X0);
           
   // enable rx and tx

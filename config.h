@@ -22,6 +22,7 @@
 #ifndef config_h
 #define config_h
 
+#include "host.h"
 
 /* PIN ASSIGNMENTS begin ----------- */
 

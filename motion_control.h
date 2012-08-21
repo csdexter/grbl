@@ -22,6 +22,7 @@
 #ifndef motion_control_h
 #define motion_control_h
 
+#include <stdint.h>
 
 // Execute linear motion in absolute millimeter coordinates. Feed rate given in millimeters/second
 // unless invert_feed_rate is true. Then the feed_rate means that the motion should be completed in

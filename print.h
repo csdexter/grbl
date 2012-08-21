@@ -1,3 +1,6 @@
+//TODO: this file needs a facelift, as follows:
+//TODO: make the API not suck (just look at the prototypes!)
+//TODO: make the API portable (PGM -> Constant String)
 /*
   print.h - Functions for formatting output strings
   Part of Grbl
@@ -25,6 +28,7 @@
 #ifndef print_h
 #define print_h
 
+
 void printString(const char *s);
 
 void printPgmString(const char *s);
@@ -34,5 +38,6 @@ void printInteger(long n);
 void print_uint8_base2(uint8_t n);
 
 void printFloat(float n);
+
 
 #endif
