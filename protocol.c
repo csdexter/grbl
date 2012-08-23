@@ -32,21 +32,6 @@
 #include "serial.h"
 #include "settings.h"
 
-/*#include <avr/io.h>
-#include <inttypes.h>
-#include "protocol.h"
-#include "gcode.h"
-#include "serial.h"
-#include "print.h"
-#include "settings.h"
-#include "config.h"
-#include <math.h>
-#include "nuts_bolts.h"
-#include <avr/pgmspace.h>
-#include "stepper.h"
-#include "planner.h"
-#include "runtime.h"*/
-
 
 #define LINE_BUFFER_SIZE 50
 
@@ -57,25 +42,25 @@ static uint8_t iscomment; // Comment/block delete flag for processor to ignore c
 static void status_message(int status_code) 
 {
   if (status_code == 0) {
-    printPgmString(_S("ok\r\n"));
+    printMessage(_S("ok\r\n"));
   } else {
-    printPgmString(_S("error: "));
+    printMessage(_S("error: "));
     switch(status_code) {          
       case STATUS_BAD_NUMBER_FORMAT:
-      printPgmString(_S("Bad number format\r\n")); break;
+      printMessage(_S("Bad number format\r\n")); break;
       case STATUS_EXPECTED_COMMAND_LETTER:
-      printPgmString(_S("Expected command letter\r\n")); break;
+      printMessage(_S("Expected command letter\r\n")); break;
       case STATUS_UNSUPPORTED_STATEMENT:
-      printPgmString(_S("Unsupported statement\r\n")); break;
+      printMessage(_S("Unsupported statement\r\n")); break;
       case STATUS_FLOATING_POINT_ERROR:
-      printPgmString(_S("Floating point error\r\n")); break;
+      printMessage(_S("Floating point error\r\n")); break;
       case STATUS_MODAL_GROUP_VIOLATION:
-      printPgmString(_S("Modal group violation\r\n")); break;
+      printMessage(_S("Modal group violation\r\n")); break;
       case STATUS_INVALID_COMMAND:
-      printPgmString(_S("Invalid command\r\n")); break;
+      printMessage(_S("Invalid command\r\n")); break;
       default:
       printInteger(status_code);
-      printPgmString(_S("\r\n"));
+      printMessage(_S("\r\n"));
     }
   }
 }
@@ -83,8 +68,8 @@ static void status_message(int status_code)
 void protocol_init() 
 {
   // Print grbl initialization message
-  printPgmString(_S("\r\nGrbl " GRBL_VERSION));
-  printPgmString(_S("\r\n'$' to dump current settings\r\n"));
+  printMessage(_S("\r\nGrbl " GRBL_VERSION));
+  printMessage(_S("\r\n'$' to dump current settings\r\n"));
 
   char_counter = 0; // Reset line input
   iscomment = false;

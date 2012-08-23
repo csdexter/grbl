@@ -22,108 +22,63 @@
 /* This code was initially inspired by the wiring_serial module by David A. Mellis which
    used to be a part of the Arduino project. */ 
 
+#include <math.h>
+
 #include "config.h"
 
 #include "serial.h"
 
 
 void printString(const char *s) {
-  while (*s)
-    serial_write(*s++);
+  while (*s) serial_write(*s++);
 }
 
-// Print a string stored in PGM-memory
-void printPgmString(const char *s) {
+/* Print a constant string (a message). Depending on architecture and
+ * configuration, this may mean said string is coming from a different address
+ * space or via a possibly totally different access method than a usual char *.
+ * The only specification is that the passed pointer can be transformed into an
+ * usual string on a character-by-character basis by calling a HAL function
+ * that will fetch it for us.
+ */
+void printMessage(const char *s) {
   char c;
 
-  while ((c = pgm_read_byte_near(s++)))
-    serial_write(c);
+  while ((c = host_fetch_S(s++))) serial_write(c);
 }
 
-// void printIntegerInBase(unsigned long n, unsigned long base)
-// { 
-// 	unsigned char buf[8 * sizeof(long)]; // Assumes 8-bit chars. 
-// 	unsigned long i = 0;
-// 
-// 	if (n == 0) {
-// 		serial_write('0');
-// 		return;
-// 	} 
-// 
-// 	while (n > 0) {
-// 		buf[i++] = n % base;
-// 		n /= base;
-// 	}
-// 
-// 	for (; i > 0; i--)
-// 		serial_write(buf[i - 1] < 10 ?
-// 			'0' + buf[i - 1] :
-// 			'A' + buf[i - 1] - 10);
-// }
+void printBinary(uint8_t n) {
+  uint8_t i;
 
-void print_uint8_base2(uint8_t n)
-{ 
-	unsigned char buf[8];
-	uint8_t i = 0;
-
-	for (; i < 8; i++) {
-		buf[i] = n & 1;
-		n >>= 1;
-	}
-
-	for (; i > 0; i--)
-		serial_write('0' + buf[i - 1]);
-}
-
-static void print_uint32_base10(unsigned long n)
-{ 
-  unsigned char buf[32]; 
-  uint8_t i = 0;
-  
-  if (n == 0) {
-    serial_write('0');
-    return;
-  } 
-  
-  while (n > 0) {
-    buf[i++] = n % 10;
-    n /= 10;
+  for(i = 8; i; i--) {
+    serial_write('0' + (n & 0x80));
+    n <<= 1;
   }
-  
-  for (; i > 0; i--)
-    serial_write('0' + buf[i - 1]);
 }
 
-void printInteger(long n)
-{
-  if (n < 0) {
+/* Math is already part of this code, sprintf() isn't. Peruse math, then */
+void printInteger(uint32_t n) {
+  uint32_t magnitude;
+
+  if(n < 10) serial_write('0' + n);
+  else {
+    magnitude = powf(10, floorf(log10f(n)));
+    printInteger(n / magnitude);
+    printInteger(n % magnitude);
+  }
+}
+
+/* Math is already part of this code, sprintf() isn't. Peruse math, then */
+void printFloat(float n) {
+  float integer, decimals;
+
+  if(signbit(n)) {
     serial_write('-');
     n = -n;
   }
-  print_uint32_base10(n);
-}
 
-void printFloat(float n)
-{
-  if (n < 0) {
-    serial_write('-');
-    n = -n;
-  }
-  n += 0.5/DECIMAL_MULTIPLIER; // Add rounding factor
- 
-  long integer_part;
-  integer_part = (int)n;
-  print_uint32_base10(integer_part);
+  decimals = modff(n, &integer);
   
+  printInteger((uint32_t)integer);
   serial_write('.');
-  
-  n -= integer_part;
-  int decimals = DECIMAL_PLACES;  
-  uint8_t decimal_part;  
-  while(decimals-- > 0) {
-    n *= 10;
-    decimal_part = (int) n;
-    serial_write('0'+decimal_part);
-    n -= decimal_part;
-  }
+  printInteger(lroundf(decimals * DECIMAL_MULTIPLIER));
 }

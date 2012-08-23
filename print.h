@@ -1,6 +1,3 @@
-//TODO: this file needs a facelift, as follows:
-//TODO: make the API not suck (just look at the prototypes!)
-//TODO: make the API portable (PGM -> Constant String)
 /*
   print.h - Functions for formatting output strings
   Part of Grbl
@@ -28,15 +25,24 @@
 #ifndef print_h
 #define print_h
 
+#include <stdint.h>
 
+
+/* Print a variable string to the system console */
 void printString(const char *s);
 
-void printPgmString(const char *s);
+/* Print a constant string to the system console */
+void printMessage(const char *s);
 
-void printInteger(long n);
+/* Print an unsigned integer value to the system console in base 10 */
+void printInteger(uint32_t n);
 
-void print_uint8_base2(uint8_t n);
+/* Print a byte to the system console in binary */
+void printBinary(uint8_t n);
 
+/* Print a floating point value to the system console in fixed precision format,
+ * as dictated by settings in config.h
+ */
 void printFloat(float n);
 
 

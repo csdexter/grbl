@@ -27,8 +27,11 @@ void _avr_delay_helper_us(uint16_t us);
 #define host_delay_ms(ms) _avr_delay_helper_ms(ms)
 #define host_delay_us(us) _avr_delay_helper_us(us)
 
-/* Host-specific constant string treatment */
+/* Host-specific constant string treatment (literal) */
 #define _S(s) PSTR(s)
-
+/* ... (type) */
+#define _S_t(s) s PROGMEM
+/* ... (access method) */
+#define host_fetch_S(s) pgm_read_byte(s)
 
 #endif /* HOST_HAL_H_ */

@@ -75,22 +75,22 @@ void settings_reset() {
 }
 
 void settings_dump() {
-  printPgmString(_S("$0 = ")); printFloat(settings.steps_per_mm[X_AXIS]);
-  printPgmString(_S(" (steps/mm x)\r\n$1 = ")); printFloat(settings.steps_per_mm[Y_AXIS]);
-  printPgmString(_S(" (steps/mm y)\r\n$2 = ")); printFloat(settings.steps_per_mm[Z_AXIS]);
-  printPgmString(_S(" (steps/mm z)\r\n$3 = ")); printInteger(settings.pulse_microseconds);
-  printPgmString(_S(" (microseconds step pulse)\r\n$4 = ")); printFloat(settings.default_feed_rate);
-  printPgmString(_S(" (mm/min default feed rate)\r\n$5 = ")); printFloat(settings.default_seek_rate);
-  printPgmString(_S(" (mm/min default seek rate)\r\n$6 = ")); printFloat(settings.mm_per_arc_segment);
-  printPgmString(_S(" (mm/arc segment)\r\n$7 = ")); printInteger(settings.invert_mask_stepdir);
-  printPgmString(_S(" (step port invert mask. binary = ")); print_uint8_base2(settings.invert_mask_stepdir);
-  printPgmString(_S(")\r\n$8 = ")); printInteger(settings.invert_mask_limit);
-  printPgmString(_S(" (limits port invert mask. binary = ")); print_uint8_base2(settings.invert_mask_limit);
-  printPgmString(_S(")\r\n$9 = ")); printFloat(settings.acceleration/(60*60)); // Convert from mm/min^2 for human readability
-  printPgmString(_S(" (acceleration in mm/sec^2)\r\n$10 = ")); printFloat(settings.junction_deviation);
-  printPgmString(_S(" (cornering junction deviation in mm)"));//\r\n$11 = ")); // printInteger(settings.auto_start);
-//   printPgmString(_S(" (auto-start boolean)"));
-  printPgmString(_S("\r\n'$x=value' to set parameter or just '$' to dump current settings\r\n"));
+  printMessage(_S("$0 = ")); printFloat(settings.steps_per_mm[X_AXIS]);
+  printMessage(_S(" (steps/mm x)\r\n$1 = ")); printFloat(settings.steps_per_mm[Y_AXIS]);
+  printMessage(_S(" (steps/mm y)\r\n$2 = ")); printFloat(settings.steps_per_mm[Z_AXIS]);
+  printMessage(_S(" (steps/mm z)\r\n$3 = ")); printInteger(settings.pulse_microseconds);
+  printMessage(_S(" (microseconds step pulse)\r\n$4 = ")); printFloat(settings.default_feed_rate);
+  printMessage(_S(" (mm/min default feed rate)\r\n$5 = ")); printFloat(settings.default_seek_rate);
+  printMessage(_S(" (mm/min default seek rate)\r\n$6 = ")); printFloat(settings.mm_per_arc_segment);
+  printMessage(_S(" (mm/arc segment)\r\n$7 = ")); printInteger(settings.invert_mask_stepdir);
+  printMessage(_S(" (step port invert mask. binary = ")); printBinary(settings.invert_mask_stepdir);
+  printMessage(_S(")\r\n$8 = ")); printInteger(settings.invert_mask_limit);
+  printMessage(_S(" (limits port invert mask. binary = ")); printBinary(settings.invert_mask_limit);
+  printMessage(_S(")\r\n$9 = ")); printFloat(settings.acceleration/(60*60)); // Convert from mm/min^2 for human readability
+  printMessage(_S(" (acceleration in mm/sec^2)\r\n$10 = ")); printFloat(settings.junction_deviation);
+  printMessage(_S(" (cornering junction deviation in mm)"));//\r\n$11 = ")); // printInteger(settings.auto_start);
+//   printMessage(_S(" (auto-start boolean)"));
+  printMessage(_S("\r\n'$x=value' to set parameter or just '$' to dump current settings\r\n"));
 }
 
 // Parameter lines are on the form '$4=374.3' or '$' to dump current settings
@@ -171,13 +171,13 @@ void settings_store_setting(int parameter, float value) {
   switch(parameter) {
     case 0: case 1: case 2:
     if (value <= 0.0) {
-      printPgmString(_S("Steps/mm must be > 0.0\r\n"));
+      printMessage(_S("Steps/mm must be > 0.0\r\n"));
       return;
     }
     settings.steps_per_mm[parameter] = value; break;
     case 3: 
     if (value < 3) {
-      printPgmString(_S("Step pulse must be >= 3 microseconds\r\n"));
+      printMessage(_S("Step pulse must be >= 3 microseconds\r\n"));
       return;
     }
     settings.pulse_microseconds = round(value); break;
@@ -190,17 +190,17 @@ void settings_store_setting(int parameter, float value) {
     case 10: settings.junction_deviation = fabs(value); break;
 //     case 11: settings.auto_start = value; break;
     default: 
-      printPgmString(_S("Unknown parameter\r\n"));
+      printMessage(_S("Unknown parameter\r\n"));
       return;
   }
   write_settings();
-  printPgmString(_S("Stored new setting\r\n"));
+  printMessage(_S("Stored new setting\r\n"));
 }
 
 // Initialize the config subsystem
 void settings_init() {
   if(!read_settings()) {
-    printPgmString(_S("Warning: Failed to read EEPROM settings. Using defaults.\r\n"));
+    printMessage(_S("Warning: Failed to read EEPROM settings. Using defaults.\r\n"));
     settings_reset();
     write_settings();
     settings_dump();
