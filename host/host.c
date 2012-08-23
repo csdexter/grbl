@@ -1,5 +1,5 @@
 /*
-  host.c - host architecture counterparts of native platform ecosystem
+  host.c - architecture-independent parts of HAL
   Part of Grbl
 
   Copyright (c) 2012 Radu - Eosif Mihailescu
@@ -18,7 +18,33 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "host/io.h"
+#include <stddef.h>
+#include <stdint.h>
 
-TAVRIORegisters avrIORegisters;
+#include "host.h"
 
+THostSettingStatus host_settings_store(const uint16_t signature,
+    const void *settings, const size_t size) {
+  uint8_t crc = 0, i, *j = (uint8_t *)settings;
+
+  host_nvs_store_word((uint16_t *)0x00, signature);
+  host_nvs_store_data((void *)(sizeof(uint16_t)), settings, size);
+  for(i = 0; i < size; i++) crc = host_crc8(crc, j[i]);
+  host_nvs_store_byte((uint8_t *)(size + sizeof(uint16_t)), crc);
+
+  return HOST_SETTING_OK;
+}
+
+THostSettingStatus host_settings_fetch(const uint16_t signature,
+    void *settings, const size_t size){
+  uint8_t crc = 0, i, *j = (uint8_t *)settings;
+
+  if(host_nvs_fetch_word((uint16_t *)0x00) != signature)
+    return HOST_SETTING_NOSIG;
+  host_nvs_fetch_data((void *)(sizeof(uint16_t)), settings, size);
+  for(i = 0; i < size; i++) crc = host_crc8(crc, j[i]);
+  if(host_nvs_fetch_byte((uint8_t *)(size + sizeof(uint16_t))) != crc)
+    return HOST_SETTING_NOCRC;
+
+  return HOST_SETTING_OK;
+}

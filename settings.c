@@ -26,7 +26,6 @@
 
 #include "settings.h"
 
-#include "eeprom.h"
 #include "nuts_bolts.h"
 #include "print.h"
 #include "protocol.h"
@@ -34,44 +33,10 @@
 
 settings_t settings;
 
-// Version 1 outdated settings record
-typedef struct {
-  float steps_per_mm[3];
-  uint8_t microsteps;
-  uint8_t pulse_microseconds;
-  float default_feed_rate;
-  float default_seek_rate;
-  uint8_t invert_mask;
-  float mm_per_arc_segment;
-} settings_v1_t;
-
-// Default settings (used when resetting eeprom-settings)
-#define MICROSTEPS 8
-#define DEFAULT_X_STEPS_PER_MM (94.488188976378*MICROSTEPS)
-#define DEFAULT_Y_STEPS_PER_MM (94.488188976378*MICROSTEPS)
-#define DEFAULT_Z_STEPS_PER_MM (94.488188976378*MICROSTEPS)
-#define DEFAULT_STEP_PULSE_MICROSECONDS 30
-#define DEFAULT_MM_PER_ARC_SEGMENT 0.1
-#define DEFAULT_RAPID_FEEDRATE 600.0 // mm/min, fast but not too fast: safety first!
-#define DEFAULT_FEEDRATE 60.0 // mm/min, very slow to make it obvious to the machinist that they forgot to supply F: safety first!
-#define DEFAULT_ACCELERATION (DEFAULT_FEEDRATE*60*60/10.0) // mm/min^2
-#define DEFAULT_JUNCTION_DEVIATION 0.05 // mm
-#define DEFAULT_STEPPING_INVERT_MASK ((1<<X_STEP_BIT)|(1<<Y_STEP_BIT)|(1<<Z_STEP_BIT))
-#define DEFAULT_LIMIT_INVERT_MASK 0 // active-low endstops by default
-// #define DEFAULT_AUTO_START 1 // Boolean
-
 void settings_reset() {
-  settings.steps_per_mm[X_AXIS] = DEFAULT_X_STEPS_PER_MM;
-  settings.steps_per_mm[Y_AXIS] = DEFAULT_Y_STEPS_PER_MM;
-  settings.steps_per_mm[Z_AXIS] = DEFAULT_Z_STEPS_PER_MM;
-  settings.pulse_microseconds = DEFAULT_STEP_PULSE_MICROSECONDS;
-  settings.default_feed_rate = DEFAULT_FEEDRATE;
-  settings.default_seek_rate = DEFAULT_RAPID_FEEDRATE;
-  settings.acceleration = DEFAULT_ACCELERATION;
-  settings.mm_per_arc_segment = DEFAULT_MM_PER_ARC_SEGMENT;
-  settings.invert_mask_stepdir = DEFAULT_STEPPING_INVERT_MASK;
-  settings.invert_mask_limit = DEFAULT_LIMIT_INVERT_MASK;
-  settings.junction_deviation = DEFAULT_JUNCTION_DEVIATION;
+  const settings_t defaults = DEFAULT_SETTINGS;
+
+  settings = defaults;
 }
 
 void settings_dump() {
@@ -79,17 +44,15 @@ void settings_dump() {
   printMessage(_S(" (steps/mm x)\r\n$1 = ")); printFloat(settings.steps_per_mm[Y_AXIS]);
   printMessage(_S(" (steps/mm y)\r\n$2 = ")); printFloat(settings.steps_per_mm[Z_AXIS]);
   printMessage(_S(" (steps/mm z)\r\n$3 = ")); printInteger(settings.pulse_microseconds);
-  printMessage(_S(" (microseconds step pulse)\r\n$4 = ")); printFloat(settings.default_feed_rate);
-  printMessage(_S(" (mm/min default feed rate)\r\n$5 = ")); printFloat(settings.default_seek_rate);
-  printMessage(_S(" (mm/min default seek rate)\r\n$6 = ")); printFloat(settings.mm_per_arc_segment);
-  printMessage(_S(" (mm/arc segment)\r\n$7 = ")); printInteger(settings.invert_mask_stepdir);
+  printMessage(_S(" (microseconds step pulse)\r\n$4 = ")); printFloat(settings.default_seek_rate);
+  printMessage(_S(" (mm/min default seek rate)\r\n$5 = ")); printFloat(settings.mm_per_arc_segment);
+  printMessage(_S(" (mm/arc segment)\r\n$6 = ")); printInteger(settings.invert_mask_stepdir);
   printMessage(_S(" (step port invert mask. binary = ")); printBinary(settings.invert_mask_stepdir);
-  printMessage(_S(")\r\n$8 = ")); printInteger(settings.invert_mask_limit);
+  printMessage(_S(")\r\n$7 = ")); printInteger(settings.invert_mask_limit);
   printMessage(_S(" (limits port invert mask. binary = ")); printBinary(settings.invert_mask_limit);
-  printMessage(_S(")\r\n$9 = ")); printFloat(settings.acceleration/(60*60)); // Convert from mm/min^2 for human readability
-  printMessage(_S(" (acceleration in mm/sec^2)\r\n$10 = ")); printFloat(settings.junction_deviation);
-  printMessage(_S(" (cornering junction deviation in mm)"));//\r\n$11 = ")); // printInteger(settings.auto_start);
-//   printMessage(_S(" (auto-start boolean)"));
+  printMessage(_S(")\r\n$8 = ")); printFloat(settings.acceleration/(60*60)); // Convert from mm/min^2 for human readability
+  printMessage(_S(" (acceleration in mm/sec^2)\r\n$9 = ")); printFloat(settings.junction_deviation);
+  printMessage(_S(" (cornering junction deviation in mm)"));
   printMessage(_S("\r\n'$x=value' to set parameter or just '$' to dump current settings\r\n"));
 }
 
@@ -121,51 +84,6 @@ uint8_t settings_execute_line(char *line) {
   return (STATUS_OK);
 }
 
-void write_settings() {
-  eeprom_put_char(0, SETTINGS_VERSION);
-  memcpy_to_eeprom_with_checksum(1, (char*)&settings, sizeof(settings_t));
-}
-
-int read_settings() {
-  // Check version-byte of eeprom
-  uint8_t version = eeprom_get_char(0);
-  
-  if (version == SETTINGS_VERSION) {
-    // Read settings-record and check checksum
-    if (!(memcpy_from_eeprom_with_checksum((char*)&settings, 1, sizeof(settings_t)))) {
-      return(false);
-    }
-  } else if (version == 1) {
-    // Migrate from settings version 1
-    if (!(memcpy_from_eeprom_with_checksum((char*)&settings, 1, sizeof(settings_v1_t)))) {
-      return(false);
-    }
-    settings.acceleration = DEFAULT_ACCELERATION;
-    settings.junction_deviation = DEFAULT_JUNCTION_DEVIATION;
-//     settings.auto_start = DEFAULT_AUTO_START;
-    write_settings();
-  } else if ((version == 2) || (version == 3)) {
-    // Migrate from settings version 2 and 3
-    if (!(memcpy_from_eeprom_with_checksum((char*)&settings, 1, sizeof(settings_t)))) {
-      return(false);
-    }
-    if (version == 2) { settings.junction_deviation = DEFAULT_JUNCTION_DEVIATION; }    
-    settings.acceleration *= 3600; // Convert to mm/min^2 from mm/sec^2
-//     settings.auto_start = DEFAULT_AUTO_START;
-    write_settings();
-//   } else if (version == 4) {
-//     // Migrate from settings version 4
-//     if (!(memcpy_from_eeprom_with_checksum((char*)&settings, 1, sizeof(settings_t)))) {
-//       return(false);
-//     }
-//     settings.auto_start = DEFAULT_AUTO_START;
-//     write_settings();
-  } else {      
-    return(false);
-  }
-  return(true);
-}
-
 // A helper method to set settings from command line
 void settings_store_setting(int parameter, float value) {
   switch(parameter) {
@@ -181,28 +99,24 @@ void settings_store_setting(int parameter, float value) {
       return;
     }
     settings.pulse_microseconds = round(value); break;
-    case 4: settings.default_feed_rate = value; break;
-    case 5: settings.default_seek_rate = value; break;
-    case 6: settings.mm_per_arc_segment = value; break;
-    case 7: settings.invert_mask_stepdir = trunc(value); break;
-    case 8: settings.invert_mask_limit = trunc(value); break;
-    case 9: settings.acceleration = value*60*60; break; // Convert to mm/min^2 for grbl internal use.
-    case 10: settings.junction_deviation = fabs(value); break;
-//     case 11: settings.auto_start = value; break;
-    default: 
-      printMessage(_S("Unknown parameter\r\n"));
-      return;
+    case 4: settings.default_seek_rate = value; break;
+    case 5: settings.mm_per_arc_segment = value; break;
+    case 6: settings.invert_mask_stepdir = trunc(value); break;
+    case 7: settings.invert_mask_limit = trunc(value); break;
+    case 8: settings.acceleration = value * 60 * 60; break; // Convert to mm/min^2 for grbl internal use.
+    case 9: settings.junction_deviation = fabs(value); break;
+    default: printMessage(_S("Unknown parameter\r\n")); return;
   }
-  write_settings();
+  host_settings_store(SETTINGS_SIGNATURE, &settings, sizeof(settings));
   printMessage(_S("Stored new setting\r\n"));
 }
 
 // Initialize the config subsystem
 void settings_init() {
-  if(!read_settings()) {
+  if(host_settings_fetch(SETTINGS_SIGNATURE, &settings, sizeof(settings)) != HOST_SETTING_OK) {
     printMessage(_S("Warning: Failed to read EEPROM settings. Using defaults.\r\n"));
     settings_reset();
-    write_settings();
+    host_settings_store(SETTINGS_SIGNATURE, &settings, sizeof(settings));
     settings_dump();
   }
 }

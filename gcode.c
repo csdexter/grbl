@@ -104,7 +104,7 @@ static void select_plane(uint8_t axis_0, uint8_t axis_1, uint8_t axis_2)
 void gc_init() 
 {
   memset(&gc, 0, sizeof(gc));
-  gc.feed_rate = settings.default_feed_rate;
+  gc.feed_rate = DEFAULT_FEED;
   select_plane(X_AXIS, Y_AXIS, Z_AXIS);
   gc.absolute_mode = true;
 }

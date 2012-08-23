@@ -105,7 +105,7 @@ static void approach_limit_switch(bool x, bool y, bool z) {
 }
 
 static void leave_limit_switch(bool x, bool y, bool z) {
-  homing_cycle(x, y, z, true, FEEDRATE_TO_PERIOD_US(settings.default_feed_rate) - 25); // Make this a bit faster
+  homing_cycle(x, y, z, true, FEEDRATE_TO_PERIOD_US(DEFAULT_FEED) - 25); // Make this a bit faster
 }
 
 void limits_go_home() {

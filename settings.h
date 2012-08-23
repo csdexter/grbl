@@ -1,5 +1,5 @@
 /*
-  settings.h - eeprom configuration handling 
+  settings.h - persistent configuration handling
   Part of Grbl
 
   Copyright (c) 2009-2011 Simen Svale Skogsrud
@@ -22,21 +22,18 @@
 #ifndef settings_h
 #define settings_h
 
+#include <stdbool.h>
 #include <stdint.h>
 
 
 #define GRBL_VERSION "0.8a"
 
-// Version of the EEPROM data. Will be used to migrate existing data from older versions of Grbl
-// when firmware is upgraded. Always stored in byte 0 of EEPROM
-#define SETTINGS_VERSION 4
+#define SETTINGS_SIGNATURE 0x9761u
 
-// Current global settings (persisted in EEPROM from byte 1 onwards)
+// Global settings structure
 typedef struct {
   float steps_per_mm[3];
-  uint8_t microsteps;
   uint8_t pulse_microseconds;
-  float default_feed_rate;
   float default_seek_rate;
   uint8_t invert_mask_stepdir;
   uint8_t invert_mask_limit;
@@ -44,7 +41,13 @@ typedef struct {
   float acceleration;
   float junction_deviation;
 } settings_t;
+
 extern settings_t settings;
+
+#define DEFAULT_FEED 60.0
+#define DEFAULT_SETTINGS {{200.0, 200.0, 200.0}, 50, 600.0, 0x00, 0x00, 0.1, \
+  (DEFAULT_FEED * (60 * 60)) / 10.0, 0.05 }
+
 
 // Reset settings to default values
 void settings_reset();

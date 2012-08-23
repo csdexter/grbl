@@ -8,6 +8,8 @@
 #ifndef HOST_H_
 #define HOST_H_
 
+#include <stddef.h>
+
 #if defined(__GNUC__)
 # if defined(__AVR__)
 #  include "host/host-avr.h"
@@ -17,5 +19,20 @@
 #  include "host/host-i386.h"
 # endif
 #endif
+
+
+typedef enum {
+  HOST_SETTING_OK,
+  HOST_SETTING_READONLY,
+  HOST_SETTING_NOSPACE,
+  HOST_SETTING_NOSIG,
+  HOST_SETTING_NOCRC
+} THostSettingStatus;
+
+THostSettingStatus host_settings_store(const uint16_t signature,
+    const void *settings, const size_t size);
+THostSettingStatus host_settings_fetch(const uint16_t signature,
+    void *settings, const size_t size);
+
 
 #endif /* HOST_H_ */
