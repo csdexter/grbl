@@ -5,19 +5,16 @@
 * extend stepper.c with hard limits support, this automatically makes limits.c sane (i.e. we can just ask for a X_travel + homing_threshold G00 in the right direction and tell the code we expect the endstop to trip -- instead of doing physics voodoo by injecting blocks and checking the endstop switch from limits.c)
 * remove obsolete TODOs
 * replace if (sys.abort) { return; } with a function or macro; also investigate if the "sprinkled calls" model should be maintained (process_runtime_command()).
-* remove useless members of the settings structure (microsteps, I'm looking at you)
 --
 * switch to better math (faster and smaller): use fixed point. Maybe copy stuff over from Teacup (like auto-scaling).
 * switch to better math (faster and smaller): use homebrewed routines for sin/cos/tan/hypot etc.
 * use #defines for the math magic to seamlessly switch between floating point and fixed point on AVR and between VFP and NEON on ARM
-* un-snafu #includes, align all to canonical order, remove unused
 * un-snafu types, remove archaisms (like uint8_t when we actually mean bool)
 * audit globals and structs, there's just too many of them to be right
 * prepare for porting to ARM: decouple hardware-specific parts from generic code, move everything behind #ifdefs, make it compile seamlessly for both AVR and ARM
 --
 * maybe add SPINDLE_RPM stuff (PWM) (mutually exclusive with charge pump on AVR, always on on ARM)
-* maybe add E_STOP stuff (freeze)
-* maybe un-snafu serial.c and eeprom.c -- they look thrown together in a hurry
+* maybe add E_STOP stuff (freeze -- needs to be connected to either EXEC_RESET or EXEC_HOLD)
 * maybe extend G-code with soft limit support [error/clip]
 --
 * more G-code stuff from the canonical G-Code interpreter project
