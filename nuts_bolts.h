@@ -49,7 +49,7 @@
 // NOTE: The system executor uses an unsigned 8-bit volatile variable (8 flag limit.) The default
 // flags are always false, so the runtime protocol only needs to check for a non-zero value to 
 // know when there is a runtime command to execute.
-#define EXEC_STATUS_REPORT  bit(0) // bitmask 00000001
+// #define                  bit(0) // bitmask 00000001
 #define EXEC_CYCLE_START    bit(1) // bitmask 00000010
 #define EXEC_CYCLE_STOP     bit(2) // bitmask 00000100
 #define EXEC_FEED_HOLD      bit(3) // bitmask 00001000

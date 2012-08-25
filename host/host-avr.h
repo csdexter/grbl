@@ -3,6 +3,9 @@
  *
  *  Created on: Aug 21, 2012
  *      Author: csdexter
+ *
+ * NOTE: in accordance with <util/setbaud.h> API, BAUD needs to be #defined
+ *       before we are included
  */
 
 #ifndef HOST_H_
@@ -11,6 +14,9 @@
 #ifdef HOST_HAL_H_
 # error Another HAL has already been included!
 #else
+
+#include <stdbool.h>
+#include <stdint.h>
 
 /* Host-specific includes */
 #include <avr/eeprom.h>
@@ -47,6 +53,15 @@ void _avr_delay_helper_us(uint16_t us);
 /* Host-specific CRC methods */
 #define host_crc8(crc, data) _crc_ibutton_update(crc, data)
 #define host_crc16(crc, data) _crc16_update(crc, data)
+
+/* Serial console interface */
+void host_serialconsole_init();
+void host_serialconsole_reset();
+/* Returns CONSOLE_NO_DATA if nothing to read */
+char host_serialconsole_read(void);
+/* Blocks until buffer space is available if block is set to true, returns
+ * false if in non-blocking mode and no buffer space */
+bool host_serialconsole_write(char c, bool block);
 
 
 #endif /* HOST_HAL_H_ */

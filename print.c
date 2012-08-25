@@ -19,18 +19,17 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* This code was initially inspired by the wiring_serial module by David A. Mellis which
-   used to be a part of the Arduino project. */ 
+/* This code was initially inspired by the wiring_serial module by
+ * David A. Mellis which used to be a part of the Arduino project. */
 
 #include <math.h>
+#include <stdbool.h>
 
 #include "config.h"
 
-#include "serial.h"
-
 
 void printString(const char *s) {
-  while (*s) serial_write(*s++);
+  while (*s) host_serialconsole_write(*s++, true);
 }
 
 /* Print a constant string (a message). Depending on architecture and
@@ -43,14 +42,14 @@ void printString(const char *s) {
 void printMessage(const char *s) {
   char c;
 
-  while ((c = host_fetch_S(s++))) serial_write(c);
+  while ((c = host_fetch_S(s++))) host_serialconsole_write(c, true);
 }
 
 void printBinary(uint8_t n) {
   uint8_t i;
 
   for(i = 8; i; i--) {
-    serial_write('0' + (n & 0x80));
+    host_serialconsole_write('0' + (n & 0x80), true);
     n <<= 1;
   }
 }
@@ -59,7 +58,7 @@ void printBinary(uint8_t n) {
 void printInteger(uint32_t n) {
   uint32_t magnitude;
 
-  if(n < 10) serial_write('0' + n);
+  if(n < 10) host_serialconsole_write('0' + n, true);
   else {
     magnitude = powf(10, floorf(log10f(n)));
     printInteger(n / magnitude);
@@ -72,13 +71,13 @@ void printFloat(float n) {
   float integer, decimals;
 
   if(signbit(n)) {
-    serial_write('-');
+    host_serialconsole_write('-', true);
     n = -n;
   }
 
   decimals = modff(n, &integer);
   
   printInteger((uint32_t)integer);
-  serial_write('.');
+  host_serialconsole_write('.', true);
   printInteger(lroundf(decimals * DECIMAL_MULTIPLIER));
 }

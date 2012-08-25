@@ -135,20 +135,6 @@
 #define Z_LIMIT_POS_TYPE LIMIT_TYPE_HARD
 #define Z_LIMIT_POS_VALUE 110.0
 
-// Serial port baud rate (mode is always 8-N-1; flow control is XON/XOFF if enabled below or none otherwise)
-#define BAUD_RATE 9600
-
-// Define runtime command special characters. These characters are 'picked-off' directly from the
-// serial read data stream and are not passed to the grbl line execution parser. Select characters
-// that do not and must not exist in the streamed g-code program. ASCII control characters may be 
-// used, if they are available per user setup. Also, extended ASCII codes (>127), which are never in 
-// g-code programs, maybe selected for interface programs.
-// TODO: Solidify these default characters. Temporary for now.
-#define CMD_STATUS_REPORT '?'
-#define CMD_FEED_HOLD '!'
-#define CMD_CYCLE_START '~'
-#define CMD_RESET 0x18 // ctrl-x
-
 // Specifies the number of work coordinate systems grbl will support (G54 - G59).
 // This parameter must be one or greater, currently supporting up to a value of 6.
 #define N_COORDINATE_SYSTEM 1

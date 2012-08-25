@@ -33,7 +33,6 @@
 #include "planner.h"
 #include "protocol.h"
 #include "runtime.h"
-#include "serial.h"
 #include "settings.h"
 #include "spindle_control.h"
 #include "stepper.h"
@@ -46,7 +45,7 @@ system_t sys;
 int main(void)
 {
   // Initialize system
-  serial_init(BAUD_RATE); // Setup serial baud rate and interrupts
+  host_serialconsole_init(); // Setup serial baud rate and interrupts
   SETUP_IO(); // Setup pin directions globally
   st_init(); // Setup stepper pins and interrupt timers
   host_sei(); // Enable interrupts
@@ -75,7 +74,7 @@ int main(void)
 
       // Reset system.
       memset(&sys, 0, sizeof(sys)); // Clear all system variables
-      serial_reset_read_buffer(); // Clear serial read buffer
+      host_serialconsole_reset(); // Clear serial read buffer
       settings_init(); // Load grbl settings from EEPROM
       protocol_init(); // Clear incoming line data
       plan_init(); // Clear block buffer and planner variables

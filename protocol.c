@@ -29,7 +29,6 @@
 #include "nuts_bolts.h"
 #include "print.h"
 #include "runtime.h"
-#include "serial.h"
 #include "settings.h"
 
 
@@ -117,7 +116,7 @@ uint8_t protocol_execute_line(char *line)
 void protocol_process()
 {
   uint8_t c;
-  while((c = serial_read()) != SERIAL_NO_DATA) {
+  while((c = host_serialconsole_read()) != CONSOLE_NO_DATA) {
     if ((c == '\n') || (c == '\r')) { // End of line reached
 
       // Runtime command check point before executing line. Prevent any further line executions.

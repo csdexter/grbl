@@ -20,7 +20,7 @@
 # endif
 #endif
 
-
+/* Host settings Storage/Retrieval interface */
 typedef enum {
   HOST_SETTING_OK,
   HOST_SETTING_READONLY,
@@ -33,6 +33,15 @@ THostSettingStatus host_settings_store(const uint16_t signature,
     const void *settings, const size_t size);
 THostSettingStatus host_settings_fetch(const uint16_t signature,
     void *settings, const size_t size);
+
+/* Host serial console baud rate. Serial functions are in the
+ * architecture-specific header file */
+#define CONSOLE_BAUD_RATE 9600
+/* Host serial console Rx and Tx ring buffer sizes, in bytes */
+#define CONSOLE_RXBUF_SIZE 128
+#define CONSOLE_TXBUF_SIZE 16
+/* Host serial console will readback this value when there's nothing to read */
+#define CONSOLE_NO_DATA 0xFF
 
 
 #endif /* HOST_H_ */
