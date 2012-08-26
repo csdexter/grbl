@@ -9,15 +9,14 @@
 * switch to better math (faster and smaller): use fixed point. Maybe copy stuff over from Teacup (like auto-scaling).
 * switch to better math (faster and smaller): use homebrewed routines for sin/cos/tan/hypot etc.
 * use #defines for the math magic to seamlessly switch between floating point and fixed point on AVR and between VFP and NEON on ARM
-* un-snafu types, remove archaisms (like uint8_t when we actually mean bool)
 * audit globals and structs, there's just too many of them to be right
 * prepare for porting to ARM: decouple hardware-specific parts from generic code, move everything behind #ifdefs, make it compile seamlessly for both AVR and ARM
 --
+* maybe get off Timer2 (just delay after setting the STEP lines), thus enabling SPINDLE_PWM coexistence
 * maybe add SPINDLE_RPM stuff (PWM) (mutually exclusive with charge pump on AVR, always on on ARM)
-* maybe add E_STOP stuff (freeze -- needs to be connected to either EXEC_RESET or EXEC_HOLD)
+* maybe add E_STOP stuff (freeze -- needs to be connected to EXEC_RESET)
 * maybe extend G-code with soft limit support [error/clip]
 --
 * more G-code stuff from the canonical G-Code interpreter project
 --
 * make a first attempt at splitting along the dotted line
-* make Arduino-compatible (add .ino file, investigate why it complains about duplicate symbols in serial, #define them out)
