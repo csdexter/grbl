@@ -1,0 +1,41 @@
+Generic 3-axis CNC Firmware for Arduino
+
+Based upon grbl Firmware by Simen Svale Skogsrud and Sungeun K. Jeon which was forked on 2012-07-30
+Charge Pump code by Radu - Eosif Mihailescu <radu.mihailescu@linux360.ro> on 2012-07-31
+Simulator (run-on-host) code by Jens Geisler on 2012-07-27
+Refactored for porability (HAL model) by Radu - Eosif Mihailescu on 2012-08-21
+
+This is the code of the CNC Control Panel project and this folder contains the
+code for the motion control MCU. The code for the user interface (panel) MCU is
+located TBD.
+
+See readme.textile.grbl for description of original code and licensing.
+
+To the furthest extent that this is legally possible, the fork maintained by 
+Radu - Eosif Mihailescu and published here https://github.com/csdexter/grbl
+is hereby released under the LGPL version 3.
+To the furthest extent that this is legally enforceable, the copyright remains
+with the authors listed above.
+
+NOTES:
+ * the firmware image resulting from compiling this code should be uploaded to 
+   the MCU connected to the stepper controller (Heiz Zero3 in our case)
+ * it contains motion planning routines and takes care of moving the CNC around
+   under the command of the user interface (panel) MCU which, in turn, issues
+   commands to us based on parsed G-code or user interaction
+
+HARDWARE NOTES:
+ * the current config.h defaults to the following setup:
+   * Zero3(2) -> X_DIR -> A3
+   * Zero3(3) -> X_STEP -> A0
+   * Zero3(4) -> Y_DIR -> A4
+   * Zero3(5) -> Y_STEP -> A1
+   * Zero3(6) -> Z_DIR -> A5
+   * Zero3(7) -> Z_STEP -> A2
+   * Zero3(10) -> Z_HOME -> D4
+   * Zero3(12) -> Y_HOME -> D3
+   * Zero3(13) -> X_HOME -> D2
+   * Zero3(16) -> C_PUMP -> D6
+
+For general questions and updates on this firmware package please contact the fork
+maintainer at <radu.mihailescu@linux360.ro>.

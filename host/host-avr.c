@@ -125,7 +125,7 @@ ISR(USART_RX_vect) {
   /* Need to actually perform the read to clear "data received" status */
   char data = UDR0;
   uint8_t new_head = ((serialconsole_rx_buffer_head + 1) == CONSOLE_RXBUF_SIZE)
-      ? 0 : serialconsole_rx_buffer_head + 1;;
+      ? 0 : serialconsole_rx_buffer_head + 1;
 
   if(new_head != serialconsole_rx_buffer_tail) {
     serialconsole_rx_buffer[serialconsole_rx_buffer_head] = data;
