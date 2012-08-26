@@ -49,7 +49,7 @@ void printBinary(uint8_t n) {
   uint8_t i;
 
   for(i = 8; i; i--) {
-    host_serialconsole_write('0' + (n & 0x80), true);
+    host_serialconsole_write('0' + (bool)(n & 0x80), true);
     n <<= 1;
   }
 }
@@ -57,18 +57,22 @@ void printBinary(uint8_t n) {
 /* Math is already part of this code, sprintf() isn't. Peruse math, then */
 void printInteger(uint32_t n) {
   uint32_t magnitude;
+  uint8_t exponent;
 
   if(n < 10) host_serialconsole_write('0' + n, true);
   else {
-    magnitude = powf(10, floorf(log10f(n)));
+    exponent = floor(log10(n));
+    magnitude = pow(10, exponent);
     printInteger(n / magnitude);
-    printInteger(n % magnitude);
+    if(n % magnitude) printInteger(n % magnitude);
+    else while(exponent--) host_serialconsole_write('0', true);
   }
 }
 
 /* Math is already part of this code, sprintf() isn't. Peruse math, then */
 void printFloat(float n) {
   float integer, decimals;
+  uint8_t i = DECIMAL_PLACES;
 
   if(signbit(n)) {
     host_serialconsole_write('-', true);
@@ -76,8 +80,11 @@ void printFloat(float n) {
   }
 
   decimals = modff(n, &integer);
-  
-  printInteger((uint32_t)integer);
+
+  printInteger(integer);
   host_serialconsole_write('.', true);
-  printInteger(lroundf(decimals * DECIMAL_MULTIPLIER));
+  while(i--){
+    decimals *= 10;
+    printInteger(((uint8_t)decimals) % 10);
+  }
 }
