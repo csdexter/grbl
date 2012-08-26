@@ -112,7 +112,6 @@ waitOnInputOrBuffer(0, True, "<EOF>")
 print "\nG-Code streaming finished!\n"
 if verbose:
     print "Rx Buffer usage histogram:"
-    print b_histogram
     for key, value in b_histogram.iteritems():
         print "%3d bytes (%3d%%): %-20s %5d times (%3d%%)" % (
             key, int(round(key * 100 / RX_BUFFER_SIZE)),
