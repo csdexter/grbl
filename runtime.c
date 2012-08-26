@@ -36,8 +36,7 @@
 // parsing and planning functions. This function also serves as an interface for the interrupts to 
 // set the system runtime flags, where only the main program handles them, removing the need to
 // define more computationally-expensive volatile variables.
-void execute_runtime()
-{
+void execute_runtime() {
   if (sys.execute) { // Enter only if any bit flag is true
     uint8_t rt_exec = sys.execute; // Avoid calling volatile multiple times
   
@@ -50,14 +49,14 @@ void execute_runtime()
     // Initiate stepper feed hold
     if (rt_exec & EXEC_FEED_HOLD) {
       st_feed_hold(); // Initiate feed hold.
-      bit_false(sys.execute,EXEC_FEED_HOLD);
+      bit_false(sys.execute, EXEC_FEED_HOLD);
     }
     
     // Reinitializes the stepper module running flags and re-plans the buffer after a feed hold.
     // NOTE: EXEC_CYCLE_STOP is set by the stepper subsystem when a cycle or feed hold completes.
     if (rt_exec & EXEC_CYCLE_STOP) {
       st_cycle_reinitialize();
-      bit_false(sys.execute,EXEC_CYCLE_STOP);
+      bit_false(sys.execute, EXEC_CYCLE_STOP);
     }
     
     if (rt_exec & EXEC_CYCLE_START) { 
@@ -65,7 +64,7 @@ void execute_runtime()
       #ifdef CYCLE_AUTO_START
         sys.auto_start = true; // Re-enable auto start after feed hold.
       #endif
-      bit_false(sys.execute,EXEC_CYCLE_START);
+      bit_false(sys.execute, EXEC_CYCLE_START);
     } 
   }
 }  

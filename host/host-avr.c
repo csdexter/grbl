@@ -15,22 +15,34 @@
 #include <stdlib.h>
 
 #include <avr/io.h>
+#include <avr/power.h>
 #include <util/delay.h>
+#include <util/delay_basic.h>
 
 #include "host.h"
 
 
-void _avr_delay_helper_ms(uint16_t ms) { while (ms--) _delay_ms(1); }
-void _avr_delay_helper_us(uint16_t us) {
-/* Code inspired from wiring.c of Arduino RTL */
+void host_delay_ms(uint16_t ms) { while (ms--) _delay_ms(1); }
+void host_delay_us(uint16_t us) {
+/* Code taken from wiring.c of Arduino RTL */
 #if F_CPU == 20000000L
   __asm__ __volatile__("nop" "\n\t" "nop");
+  if(!--us) return;
+  us = (us << 2) + us; // Faster than multiplying by 5
+  us -= 2; // account for the time taken by the previous lines
+#elif F_CPU == 16000000L
+  if(!--us) return;
+  us <<= 2; // Faster than multiplying by 4
+  us -= 2; // account for the time taken by the previous lines
+#elif F_CPU == 8000000L
+  if(!--us) return;
+  if(!--us) return;
+  us <<= 1; // Faster than multiplying by 2
+  us--;
+#else
+# error F_CPU undefined or not in {8, 16, 20}MHz
 #endif
-  if (!--us) return;
-#if F_CPU == 8000000L
-  if (!--us) return;
-#endif
-  while (us--) _delay_us(1);
+  _delay_loop_2(us);
 }
 
 static char serialconsole_rx_buffer[CONSOLE_RXBUF_SIZE];
@@ -44,7 +56,7 @@ void host_serialconsole_init(uint16_t baud) {
 #define BAUD CONSOLE_BAUD_RATE
 #include <util/setbaud.h>
 
-  PRR &= ~_BV(PRUSART0);
+  power_usart0_enable();
 
   UBRR0H = UBRRH_VALUE;
   UBRR0L = UBRRL_VALUE;
@@ -89,7 +101,7 @@ bool host_serialconsole_write(char c, bool block) {
 }
 
 bool host_serialconsole_printinteger(uint32_t n, bool block) {
-  char buf[12] = "\0"; /* 4294967295 + 1 for sign + 1 for \0 */
+  char buf[12]; /* 4294967295 + 1 for sign + 1 for \0 */
 
   return host_serialconsole_printstring(ultoa(n, buf, 10), block);
 }
@@ -110,7 +122,6 @@ bool host_serialconsole_printfloat(float n, uint8_t precision, bool block) {
 
   return host_serialconsole_printstring(dtostrf(n, 0, precision, buf), block);
 }
-
 
 ISR(USART_UDRE_vect) {
   UDR0 = serialconsole_tx_buffer[serialconsole_tx_buffer_tail];

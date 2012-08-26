@@ -30,10 +30,8 @@
 #define host_sei() sei()
 
 /* Host-specific delays */
-void _avr_delay_helper_ms(uint16_t ms);
-void _avr_delay_helper_us(uint16_t us);
-#define host_delay_ms(ms) _avr_delay_helper_ms(ms)
-#define host_delay_us(us) _avr_delay_helper_us(us)
+void host_delay_ms(uint16_t ms);
+void host_delay_us(uint16_t us);
 
 /* Host-specific constant string treatment (literal) */
 #define _S(s) PSTR(s)

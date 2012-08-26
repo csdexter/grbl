@@ -25,16 +25,13 @@
 #include "config.h"
 
 
-int read_float(char *line, uint8_t *char_counter, float *float_ptr)                  
-{
-  char *start = line + *char_counter;
+bool read_float(char *line, uint8_t *char_counter, float *float_ptr) {
   char *end;
   
-  *float_ptr = strtod(start, &end);
-  if(end == start) { 
-    return(false); 
-  };
-
-  *char_counter = end - line;
-  return(true);
+  *float_ptr = strtod(&line[*char_counter], &end);
+  if(end == &line[*char_counter]) return false;
+  else {
+    *char_counter = end - line;
+    return true;
+  }
 }
