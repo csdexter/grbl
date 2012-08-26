@@ -28,23 +28,6 @@
 #include "config.h"
 
 
-void printString(const char *s) {
-  while (*s) host_serialconsole_write(*s++, true);
-}
-
-/* Print a constant string (a message). Depending on architecture and
- * configuration, this may mean said string is coming from a different address
- * space or via a possibly totally different access method than a usual char *.
- * The only specification is that the passed pointer can be transformed into an
- * usual string on a character-by-character basis by calling a HAL function
- * that will fetch it for us.
- */
-void printMessage(const char *s) {
-  char c;
-
-  while ((c = host_fetch_S(s++))) host_serialconsole_write(c, true);
-}
-
 void printBinary(uint8_t n) {
   uint8_t i;
 

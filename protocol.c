@@ -41,25 +41,25 @@ static uint8_t iscomment; // Comment/block delete flag for processor to ignore c
 static void status_message(int status_code) 
 {
   if (status_code == 0) {
-    printMessage(_S("ok\r\n"));
+    host_serialconsole_printmessage(_S("ok\r\n"), true);
   } else {
-    printMessage(_S("error: "));
+    host_serialconsole_printmessage(_S("error: "), true);
     switch(status_code) {          
       case STATUS_BAD_NUMBER_FORMAT:
-      printMessage(_S("Bad number format\r\n")); break;
+      host_serialconsole_printmessage(_S("Bad number format\r\n"), true); break;
       case STATUS_EXPECTED_COMMAND_LETTER:
-      printMessage(_S("Expected command letter\r\n")); break;
+      host_serialconsole_printmessage(_S("Expected command letter\r\n"), true); break;
       case STATUS_UNSUPPORTED_STATEMENT:
-      printMessage(_S("Unsupported statement\r\n")); break;
+      host_serialconsole_printmessage(_S("Unsupported statement\r\n"), true); break;
       case STATUS_FLOATING_POINT_ERROR:
-      printMessage(_S("Floating point error\r\n")); break;
+      host_serialconsole_printmessage(_S("Floating point error\r\n"), true); break;
       case STATUS_MODAL_GROUP_VIOLATION:
-      printMessage(_S("Modal group violation\r\n")); break;
+      host_serialconsole_printmessage(_S("Modal group violation\r\n"), true); break;
       case STATUS_INVALID_COMMAND:
-      printMessage(_S("Invalid command\r\n")); break;
+      host_serialconsole_printmessage(_S("Invalid command\r\n"), true); break;
       default:
       printInteger(status_code);
-      printMessage(_S("\r\n"));
+      host_serialconsole_printmessage(_S("\r\n"), true);
     }
   }
 }
@@ -67,8 +67,8 @@ static void status_message(int status_code)
 void protocol_init() 
 {
   // Print grbl initialization message
-  printMessage(_S("\r\nGrbl " GRBL_VERSION));
-  printMessage(_S("\r\n'$' to dump current settings\r\n"));
+  host_serialconsole_printmessage(_S("\r\nGrbl " GRBL_VERSION), true);
+  host_serialconsole_printmessage(_S("\r\n'$' to dump current settings\r\n"), true);
 
   char_counter = 0; // Reset line input
   iscomment = false;

@@ -8,6 +8,7 @@
 #ifndef HOST_H_
 #define HOST_H_
 
+#include <stdbool.h>
 #include <stddef.h>
 
 #if defined(__GNUC__)
@@ -34,7 +35,7 @@ THostSettingStatus host_settings_store(const uint16_t signature,
 THostSettingStatus host_settings_fetch(const uint16_t signature,
     void *settings, const size_t size);
 
-/* Host serial console baud rate. Serial functions are in the
+/* Host serial console baud rate. Low-level functions are in the
  * architecture-specific header file */
 #define CONSOLE_BAUD_RATE 9600
 /* Host serial console Rx and Tx ring buffer sizes, in bytes */
@@ -42,6 +43,14 @@ THostSettingStatus host_settings_fetch(const uint16_t signature,
 #define CONSOLE_TXBUF_SIZE 16
 /* Host serial console will readback this value when there's nothing to read */
 #define CONSOLE_NO_DATA 0xFF
+/* Host serial console variable string output. Blocks until buffer space is
+ * available if block is set to true, returns false if in non-blocking mode and
+ * no buffer space */
+bool host_serialconsole_printstring(const char *s, bool block);
+/* Host serial console constant string output. Blocks until buffer space is
+ * available if block is set to true, returns false if in non-blocking mode and
+ * no buffer space */
+bool host_serialconsole_printmessage(const char *s, bool block);
 
 
 #endif /* HOST_H_ */

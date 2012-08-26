@@ -18,6 +18,7 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -47,4 +48,26 @@ THostSettingStatus host_settings_fetch(const uint16_t signature,
     return HOST_SETTING_NOCRC;
 
   return HOST_SETTING_OK;
+}
+
+bool host_serialconsole_printstring(const char *s, bool block) {
+  while(*s) if(!(block || host_serialconsole_write(*s++, block))) return false;
+
+  return true;
+}
+
+/* Print a constant string (a message). Depending on architecture and
+ * configuration, this may mean said string is coming from a different address
+ * space or via a possibly totally different access method than a usual char *.
+ * The only specification is that the passed pointer can be transformed into an
+ * usual string on a character-by-character basis by calling a HAL function
+ * that will fetch it for us.
+ */
+bool host_serialconsole_printmessage(const char *s, bool block) {
+  char c;
+
+  while ((c = host_fetch_S(s++)))
+    if(!(block || host_serialconsole_write(c, block))) return false;
+
+  return true;
 }

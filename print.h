@@ -28,12 +28,6 @@
 #include <stdint.h>
 
 
-/* Print a variable string to the system console */
-void printString(const char *s);
-
-/* Print a constant string to the system console */
-void printMessage(const char *s);
-
 /* Print an unsigned integer value to the system console in base 10 */
 void printInteger(uint32_t n);
 
