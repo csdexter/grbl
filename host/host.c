@@ -51,7 +51,7 @@ THostSettingStatus host_settings_fetch(const uint16_t signature,
 }
 
 bool host_serialconsole_printstring(const char *s, bool block) {
-  while(*s) if(!(block || host_serialconsole_write(*s++, block))) return false;
+  while(*s) if(!host_serialconsole_write(*s++, block)) return false;
 
   return true;
 }
@@ -67,7 +67,7 @@ bool host_serialconsole_printmessage(const char *s, bool block) {
   char c;
 
   while ((c = host_fetch_S(s++)))
-    if(!(block || host_serialconsole_write(c, block))) return false;
+    if(!host_serialconsole_write(c, block)) return false;
 
   return true;
 }

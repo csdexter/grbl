@@ -62,6 +62,18 @@ char host_serialconsole_read(void);
 /* Blocks until buffer space is available if block is set to true, returns
  * false if in non-blocking mode and no buffer space */
 bool host_serialconsole_write(char c, bool block);
+/* Host serial console unsigned integer output in base 10. Blocks until buffer
+ * space is available if block is set to true, returns false if in non-blocking
+ * mode and no buffer space */
+bool host_serialconsole_printinteger(uint32_t n, bool block);
+/* Host serial console byte output in base 2. Blocks until buffer space is
+ * available if block is set to true, returns false if in non-blocking mode and
+ * no buffer space */
+bool host_serialconsole_printbinary(uint8_t n, bool block);
+/* Host serial console float output with precision figures after the decimal
+ * point. Blocks until buffer space is available if block is set to true,
+ * returns false if in non-blocking mode and no buffer space */
+bool host_serialconsole_printfloat(float n, uint8_t precision, bool block);
 
 
 #endif /* HOST_HAL_H_ */

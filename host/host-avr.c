@@ -1,5 +1,5 @@
 /*
- * host-avr.c - Atmel AVR -specific HAL routines
+ * host-avr.c - Atmel AVR-specific HAL routines
  *
  *  Created on: Aug 21, 2012
  *      Author: csdexter
@@ -12,6 +12,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include <avr/io.h>
 #include <util/delay.h>
@@ -86,6 +87,30 @@ bool host_serialconsole_write(char c, bool block) {
 
   return true;
 }
+
+bool host_serialconsole_printinteger(uint32_t n, bool block) {
+  char buf[12] = "\0"; /* 4294967295 + 1 for sign + 1 for \0 */
+
+  return host_serialconsole_printstring(ultoa(n, buf, 10), block);
+}
+
+bool host_serialconsole_printbinary(uint8_t n, bool block) {
+  uint8_t i;
+
+  for(i = 8; i; i--) {
+    if(!host_serialconsole_write('0' + (bool)(n & 0x80), block)) return false;
+    n <<= 1;
+  }
+
+  return true;
+}
+
+bool host_serialconsole_printfloat(float n, uint8_t precision, bool block) {
+  char buf[11]; /* 8 digits + 1 for sign + 1 for decimal point + 1 for \0 */
+
+  return host_serialconsole_printstring(dtostrf(n, 0, precision, buf), block);
+}
+
 
 ISR(USART_UDRE_vect) {
   UDR0 = serialconsole_tx_buffer[serialconsole_tx_buffer_tail];

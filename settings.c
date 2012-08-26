@@ -27,7 +27,6 @@
 #include "settings.h"
 
 #include "nuts_bolts.h"
-#include "print.h"
 #include "protocol.h"
 
 
@@ -40,18 +39,30 @@ void settings_reset() {
 }
 
 void settings_dump() {
-  host_serialconsole_printmessage(_S("$0 = "), true); printFloat(settings.steps_per_mm[X_AXIS]);
-  host_serialconsole_printmessage(_S(" (steps/mm x)\r\n$1 = "), true); printFloat(settings.steps_per_mm[Y_AXIS]);
-  host_serialconsole_printmessage(_S(" (steps/mm y)\r\n$2 = "), true); printFloat(settings.steps_per_mm[Z_AXIS]);
-  host_serialconsole_printmessage(_S(" (steps/mm z)\r\n$3 = "), true); printInteger(settings.pulse_microseconds);
-  host_serialconsole_printmessage(_S(" (microseconds step pulse)\r\n$4 = "), true); printFloat(settings.default_seek_rate);
-  host_serialconsole_printmessage(_S(" (mm/min default seek rate)\r\n$5 = "), true); printFloat(settings.mm_per_arc_segment);
-  host_serialconsole_printmessage(_S(" (mm/arc segment)\r\n$6 = "), true); printInteger(settings.invert_mask_stepdir);
-  host_serialconsole_printmessage(_S(" (step port invert mask. binary = "), true); printBinary(settings.invert_mask_stepdir);
-  host_serialconsole_printmessage(_S(")\r\n$7 = "), true); printInteger(settings.invert_mask_limit);
-  host_serialconsole_printmessage(_S(" (limits port invert mask. binary = "), true); printBinary(settings.invert_mask_limit);
-  host_serialconsole_printmessage(_S(")\r\n$8 = "), true); printFloat(settings.acceleration/(60*60)); // Convert from mm/min^2 for human readability
-  host_serialconsole_printmessage(_S(" (acceleration in mm/sec^2)\r\n$9 = "), true); printFloat(settings.junction_deviation);
+  host_serialconsole_printmessage(_S("$0 = "), true);
+  host_serialconsole_printfloat(settings.steps_per_mm[X_AXIS], 4, true);
+  host_serialconsole_printmessage(_S(" (steps/mm x)\r\n$1 = "), true);
+  host_serialconsole_printfloat(settings.steps_per_mm[Y_AXIS], 4, true);
+  host_serialconsole_printmessage(_S(" (steps/mm y)\r\n$2 = "), true);
+  host_serialconsole_printfloat(settings.steps_per_mm[Z_AXIS], 4, true);
+  host_serialconsole_printmessage(_S(" (steps/mm z)\r\n$3 = "), true);
+  host_serialconsole_printinteger(settings.pulse_microseconds, true);
+  host_serialconsole_printmessage(_S(" (microseconds step pulse)\r\n$4 = "), true);
+  host_serialconsole_printfloat(settings.default_seek_rate, 2, true);
+  host_serialconsole_printmessage(_S(" (mm/min default seek rate)\r\n$5 = "), true);
+  host_serialconsole_printfloat(settings.mm_per_arc_segment, 4, true);
+  host_serialconsole_printmessage(_S(" (mm/arc segment)\r\n$6 = "), true);
+  host_serialconsole_printinteger(settings.invert_mask_stepdir, true);
+  host_serialconsole_printmessage(_S(" (step port invert mask. binary = "), true);
+  host_serialconsole_printbinary(settings.invert_mask_stepdir, true);
+  host_serialconsole_printmessage(_S(")\r\n$7 = "), true);
+  host_serialconsole_printinteger(settings.invert_mask_limit, true);
+  host_serialconsole_printmessage(_S(" (limits port invert mask. binary = "), true);
+  host_serialconsole_printbinary(settings.invert_mask_limit, true);
+  host_serialconsole_printmessage(_S(")\r\n$8 = "), true);
+  host_serialconsole_printfloat(settings.acceleration / (60 * 60), 2, true); // Convert from mm/min^2 for human readability
+  host_serialconsole_printmessage(_S(" (acceleration in mm/sec^2)\r\n$9 = "), true);
+  host_serialconsole_printfloat(settings.junction_deviation, 4, true);
   host_serialconsole_printmessage(_S(" (cornering junction deviation in mm)"), true);
   host_serialconsole_printmessage(_S("\r\n'$x=value' to set parameter or just '$' to dump current settings\r\n"), true);
 }

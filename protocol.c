@@ -27,7 +27,6 @@
 
 #include "gcode.h"
 #include "nuts_bolts.h"
-#include "print.h"
 #include "runtime.h"
 #include "settings.h"
 
@@ -58,7 +57,7 @@ static void status_message(int status_code)
       case STATUS_INVALID_COMMAND:
       host_serialconsole_printmessage(_S("Invalid command\r\n"), true); break;
       default:
-      printInteger(status_code);
+      host_serialconsole_printinteger(status_code, true);
       host_serialconsole_printmessage(_S("\r\n"), true);
     }
   }
