@@ -30,7 +30,10 @@ static uint8_t current_direction;
 
 void spindle_stop()
 {
-  SPINDLE_ENABLE_PORT &= ~(1<<SPINDLE_ENABLE_BIT);
+  /* If we were spinning, we need to wait until all previous moves are executed
+   * before stopping. */
+  if(current_direction) plan_synchronize();
+  host_gpio_write(SPINDLE_ENABLE, false, HOST_GPIO_MODE_BIT);
 }
 
 void spindle_init()
@@ -43,17 +46,17 @@ void spindle_init()
 
 void spindle_run(int direction, uint32_t rpm) 
 {
+  /* If we need to change state, we must wait for all moves to complete before
+   * doing so. */
   if (direction != current_direction) {
     plan_synchronize();
     if (direction) {
       #ifdef SPINDLE_DIRECTION
-        if(direction > 0) {
-          SPINDLE_DIRECTION_PORT &= ~(1<<SPINDLE_DIRECTION_BIT);
-        } else {
-          SPINDLE_DIRECTION_PORT |= 1<<SPINDLE_DIRECTION_BIT;
-        }
+        if(direction > 0)
+          host_gpio_write(SPINDLE_DIRECTION, false, HOST_GPIO_MODE_BIT);
+        else host_gpio_write(SPINDLE_DIRECTION, true, HOST_GPIO_MODE_BIT);
       #endif
-      SPINDLE_ENABLE_PORT |= 1<<SPINDLE_ENABLE_BIT;
+      host_gpio_write(SPINDLE_ENABLE, true, HOST_GPIO_MODE_BIT);
     } else {
       spindle_stop();
     }

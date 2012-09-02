@@ -16,6 +16,8 @@
 * maybe add SPINDLE_RPM stuff (PWM) (mutually exclusive with charge pump on AVR, always on on ARM)
 * maybe add E_STOP stuff (freeze -- needs to be connected to EXEC_RESET)
 * maybe extend G-code with soft limit support [error/clip]
+* maybe remember that this is a plotter, not a pixel display, and do way better arcs
+* if we get the one above right, maybe implement Bezier and NURBs :-)
 --
 * more G-code stuff from the canonical G-Code interpreter project
 --
