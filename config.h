@@ -52,42 +52,53 @@
 #define LIMIT_SOFT // Support for software enforced limits
 #define LIMIT_TYPE_SOFT 0
 #define LIMIT_TYPE_HARD 1
-#define X_LIMIT_NEG_TYPE LIMIT_TYPE_SOFT
-#define X_LIMIT_NEG_VALUE 0.0
-#define X_LIMIT_POS_TYPE LIMIT_TYPE_HARD
-#define X_LIMIT_POS_VALUE 720.0
-#define Y_LIMIT_NEG_TYPE LIMIT_TYPE_SOFT
-#define Y_LIMIT_NEG_VALUE 0.0
-#define Y_LIMIT_POS_TYPE LIMIT_TYPE_HARD
-#define Y_LIMIT_POS_VALUE 420.0
-#define Z_LIMIT_NEG_TYPE LIMIT_TYPE_SOFT
-#define Z_LIMIT_NEG_VALUE 0.0
-#define Z_LIMIT_POS_TYPE LIMIT_TYPE_HARD
-#define Z_LIMIT_POS_VALUE 110.0
+#define LIMIT_X_NEG_TYPE LIMIT_TYPE_HARD
+#define LIMIT_X_NEG_VALUE 0.0
+#define LIMIT_X_POS_TYPE LIMIT_TYPE_SOFT
+#define LIMIT_X_POS_VALUE 720.0
+#define LIMIT_Y_NEG_TYPE LIMIT_TYPE_HARD
+#define LIMIT_Y_NEG_VALUE 0.0
+#define LIMIT_Y_POS_TYPE LIMIT_TYPE_SOFT
+#define LIMIT_Y_POS_VALUE 420.0
+#define LIMIT_Z_NEG_TYPE LIMIT_TYPE_SOFT
+#define LIMIT_Z_NEG_VALUE 0.0
+#define LIMIT_Z_POS_TYPE LIMIT_TYPE_HARD
+#define LIMIT_Z_POS_VALUE 110.0
 
-// Specifies the number of work coordinate systems grbl will support (G54 - G59).
-// This parameter must be one or greater, currently supporting up to a value of 6.
+// Specifies the number of work coordinate systems grbl will support (G54-G59).
+// This parameter must be 1 or greater, currently supporting up to a value of 6.
 #define N_COORDINATE_SYSTEM 1
 
-// This parameter sets the delay time before disabling the steppers after the final block of movement.
-// A short delay ensures the steppers come to a complete stop and the residual inertial force in the 
-// CNC axes don't cause the axes to drift off position. This is particularly important when manually 
-// entering g-code into grbl, i.e. locating part zero or simple manual machining. If the axes drift,
-// grbl has no way to know this has happened, since stepper motors are open-loop control. Depending
-// on the machine, this parameter may need to be larger or smaller than the default time.
+// This parameter sets the delay time before disabling the steppers after the
+// final block of movement. A short delay ensures the steppers come to a
+// complete stop and the residual inertial force in the CNC axes don't cause the
+// axes to drift off position. This is particularly important when manually
+// entering g-code into grbl, i.e. locating part zero or simple manual
+// machining. If the axes drift, grbl has no way to know this has happened,
+// since stepper motors are open-loop control. Depending on the machine, this
+// parameter may need to be larger or smaller than the default time.
 // NOTE: If set to zero, the delay will not be compiled.
-// NOTE: If the current hardware configuration doesn't have a means to switch stepper motor power
-//       on and off (i.e. STEPPER_DISABLE is NOT #defined), the delay is also not compiled.
+// NOTE: If the current hardware configuration doesn't have a means to switch
+//       stepper motor power on and off (i.e. STEPPERS_DISABLE is NOT #defined),
+//       the delay is also not compiled.
+// NOTE: If your machine has ball screws and your stepper controller cuts power
+//       to the steppers when STEPPERS_DISABLE is asserted, there is a very high
+//       chance the axes will move off-position (especially if currently cutting
+//       into the part) since the ball screws have by design very low axial
+//       friction. You may not want to use STEPPERS_DISABLE at all in this case.
 #define STEPPER_IDLE_LOCK_TIME 25 // (milliseconds) - Integer > 0
 
-// The temporal resolution of the acceleration management subsystem. Higher number give smoother
-// acceleration but may impact performance.
-// NOTE: Increasing this parameter will help any resolution related issues, especially with machines 
-// requiring very high accelerations and/or very fast feedrates. In general, this will reduce the 
-// error between how the planner plans the motions and how the stepper program actually performs them.
-// However, at some point, the resolution can be high enough, where the errors related to numerical 
-// round-off can be great enough to cause problems and/or it's too fast for the Arduino. The correct
-// value for this parameter is machine dependent, so it's advised to set this only as high as needed.
+// The temporal resolution of the acceleration management subsystem. Higher
+// numbers give smoother acceleration but may impact performance.
+// NOTE: Increasing this parameter will help any resolution related issues,
+//       especially with machines requiring very high accelerations and/or very
+//       fast feedrates. In general, this will reduce the error between how the
+//       planner plans the motions and how the stepper program actually performs
+//       them. However, at some point, the resolution can be high enough, where
+//       the errors related to numerical round-off can be great enough to cause
+//       problems and/or it's too fast for the Arduino. The correct value for
+//       this parameter is machine dependent, so it's advised to set this only
+//       as high as needed.
 // Approximate successful values can range from 30L to 100L or more.
 #define ACCELERATION_TICKS_PER_SECOND 50L
 
@@ -135,7 +146,7 @@
 // normal operation. The Timer2 compare fires next to set the stepper pins after the step 
 // pulse delay time, and Timer2 overflow will complete the step pulse, except now delayed 
 // by the step pulse time plus the step pulse delay. (Thanks langwadt for the idea!)
-//   This is an experimental feature that should only be used if your setup requires a longer
+// This is an experimental feature that should only be used if your setup requires a longer
 // delay between direction and step pin settings (some opto coupler based drivers), as it may
 // adversely effect Grbl's high-end performance (>10kHz). Please notify Grbl administrators 
 // of your successes or difficulties, as we will monitor this and possibly integrate this as a 

@@ -28,7 +28,7 @@
 
 #define GRBL_VERSION "0.8a"
 
-#define SETTINGS_SIGNATURE 0x9761u
+#define SETTINGS_SIGNATURE 0x9561U
 
 // Global settings structure
 typedef struct {

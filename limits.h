@@ -21,8 +21,6 @@
 #ifndef limits_h
 #define limits_h
 
-#include "nuts_bolts.h"
-
 
 // initialize the limits module
 void limits_init(void);

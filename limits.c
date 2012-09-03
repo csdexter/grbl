@@ -26,6 +26,8 @@
 #include "limits.h"
 #include "limits-private.h"
 
+#include "gcode.h"
+#include "motion_control.h"
 #include "nuts_bolts.h"
 #include "planner.h"
 #include "settings.h"
@@ -33,29 +35,51 @@
 
 
 void limits_init(void) {
-  host_gpio_direction(LIMIT_X, HOST_GPIO_DIRECTION_INPUT, HOST_GPIO_MODE_BIT);
-  host_gpio_direction(LIMIT_Y, HOST_GPIO_DIRECTION_INPUT, HOST_GPIO_MODE_BIT);
-  host_gpio_direction(LIMIT_Z, HOST_GPIO_DIRECTION_INPUT, HOST_GPIO_MODE_BIT);
+  #ifdef LIMIT_HARD
+    host_gpio_direction(LIMIT_X, HOST_GPIO_DIRECTION_INPUT, HOST_GPIO_MODE_BIT);
+    host_gpio_direction(LIMIT_Y, HOST_GPIO_DIRECTION_INPUT, HOST_GPIO_MODE_BIT);
+    host_gpio_direction(LIMIT_Z, HOST_GPIO_DIRECTION_INPUT, HOST_GPIO_MODE_BIT);
+  #endif
 }
 
-static void homing_cycle(bool x_axis, bool y_axis, bool z_axis, bool reverse_direction, uint32_t microseconds_per_pulse) {
+static void homing_cycle(bool x_axis, bool y_axis, bool z_axis,
+    bool reverse_direction, uint32_t microseconds_per_pulse) {
   uint32_t step_delay = microseconds_per_pulse - settings.pulse_microseconds;
   stepper_output_t out_bits;
   limit_input_t limit_bits;
 
-  out_bits.flags.dir_x = true;
-  out_bits.flags.dir_y = true;
-  out_bits.flags.dir_z = true;
-
-  if(x_axis) out_bits.flags.step_x = true;
-  if(y_axis) out_bits.flags.step_y = true;
-  if(z_axis) out_bits.flags.step_z = true;
-
-  // Invert direction bits if this is a reverse homing_cycle
-  if(reverse_direction) {
-    out_bits.flags.dir_x ^= true;
-    out_bits.flags.dir_y ^= true;
-    out_bits.flags.dir_z ^= true;
+  if(x_axis) {
+    out_bits.flags.step_x = true;
+    if(LIMIT_X_NEG_TYPE == LIMIT_TYPE_HARD)
+      out_bits.flags.dir_x = true ^ reverse_direction;
+    else if(LIMIT_X_POS_TYPE == LIMIT_TYPE_HARD)
+      out_bits.flags.dir_x = false ^ reverse_direction;
+    else { // No limit switch, can't calibrate
+      out_bits.flags.step_x = false;
+      x_axis = false;
+    }
+  }
+  if(y_axis) {
+    out_bits.flags.step_y = true;
+    if(LIMIT_Y_NEG_TYPE == LIMIT_TYPE_HARD)
+      out_bits.flags.dir_y = true ^ reverse_direction;
+    else if(LIMIT_Y_POS_TYPE == LIMIT_TYPE_HARD)
+      out_bits.flags.dir_y = false ^ reverse_direction;
+    else { // No limit switch, can't calibrate
+      out_bits.flags.step_y = false;
+      y_axis = false;
+    }
+  }
+  if(z_axis) {
+    out_bits.flags.step_z = true;
+    if(LIMIT_Z_NEG_TYPE == LIMIT_TYPE_HARD)
+      out_bits.flags.dir_z = true ^ reverse_direction;
+    else if(LIMIT_Z_POS_TYPE == LIMIT_TYPE_HARD)
+      out_bits.flags.dir_z = false ^ reverse_direction;
+    else { // No limit switch, can't calibrate
+      out_bits.flags.step_z = false;
+      z_axis = false;
+    }
   }
 
   // Apply the global invert mask
@@ -64,39 +88,38 @@ static void homing_cycle(bool x_axis, bool y_axis, bool z_axis, bool reverse_dir
   host_gpio_write(DIR_X, out_bits.flags.dir_x, HOST_GPIO_MODE_BIT);
   host_gpio_write(DIR_Y, out_bits.flags.dir_y, HOST_GPIO_MODE_BIT);
   host_gpio_write(DIR_Z, out_bits.flags.dir_z, HOST_GPIO_MODE_BIT);
-
+//TODO: replace hand-stepping loop with mc_line(to infinity) while limit switch
+//      detection (use pin change interrupt) is active and signaled as expected.
+//      Limit switch handler will kill the planner/stepper as in sys.abort for
+//      that axis only and report back to us (since it was expected).
   for(;;) {
-    limit_bits.flags.limit_x = host_gpio_read(LIMIT_X, HOST_GPIO_MODE_BIT);
-    limit_bits.flags.limit_y = host_gpio_read(LIMIT_Y, HOST_GPIO_MODE_BIT);
-    limit_bits.flags.limit_z = host_gpio_read(LIMIT_Z, HOST_GPIO_MODE_BIT);
-
-    if(reverse_direction) {
-      limit_bits.flags.limit_x ^= true;
-      limit_bits.flags.limit_y ^= true;
-      limit_bits.flags.limit_z ^= true;
-    }
+    limit_bits.flags.limit_x =
+        host_gpio_read(LIMIT_X, HOST_GPIO_MODE_BIT) ^ reverse_direction;
+    limit_bits.flags.limit_y =
+        host_gpio_read(LIMIT_Y, HOST_GPIO_MODE_BIT) ^ reverse_direction;
+    limit_bits.flags.limit_z =
+        host_gpio_read(LIMIT_Z, HOST_GPIO_MODE_BIT) ^ reverse_direction;
 
     // Apply the global invert mask
     limit_bits.value ^= settings.invert.masks.limit;
 
     if (x_axis && !limit_bits.flags.limit_x) {
       x_axis = false;
-      out_bits.flags.step_x = false;
+      out_bits.flags.step_x = settings.invert.flags.step_x;
     }
     if (y_axis && !limit_bits.flags.limit_y) {
       y_axis = false;
-      out_bits.flags.step_y = false;
+      out_bits.flags.step_y = settings.invert.flags.step_y;
     }
     if (z_axis && !limit_bits.flags.limit_z) {
       z_axis = false;
-      out_bits.flags.step_z = false;
+      out_bits.flags.step_z = settings.invert.flags.step_z;
     }
 
     // Check if we are done
     if(!(x_axis || y_axis || z_axis)) return;
 
-    // Send stepping pulse, can't use |= because we may have 1 -> 0 transitions,
-    // e.g. when the STEP lines are inverted
+    // Send stepping pulse
     host_gpio_write(STEP_X, out_bits.flags.step_x, HOST_GPIO_MODE_BIT);
     host_gpio_write(STEP_Y, out_bits.flags.step_y, HOST_GPIO_MODE_BIT);
     host_gpio_write(STEP_Z, out_bits.flags.step_z, HOST_GPIO_MODE_BIT);
@@ -127,9 +150,25 @@ static void leave_limit_switch(bool x, bool y, bool z) {
 void limits_go_home() {
   plan_synchronize();
   approach_limit_switch(false, false, true); // First home the z axis
-  approach_limit_switch(true, true, false);  // Then home the x and y axis
+  approach_limit_switch(true, true, false);  // Then home the x and y axes
   // Now carefully leave the limit switches
   leave_limit_switch(true, true, true);
-  // Conclude that this is machine zero
-  sys.position[X_AXIS] = sys.position[Y_AXIS] = sys.position[Z_AXIS] = 0;
+  // Record calibrated position.
+  if(LIMIT_X_NEG_TYPE == LIMIT_TYPE_HARD)
+    sys.position[X_AXIS] = LIMIT_X_NEG_VALUE * settings.steps_per_mm[X_AXIS];
+  else if(LIMIT_X_POS_TYPE == LIMIT_TYPE_HARD)
+    sys.position[X_AXIS] = LIMIT_X_POS_VALUE * settings.steps_per_mm[X_AXIS];
+  if(LIMIT_Y_NEG_TYPE == LIMIT_TYPE_HARD)
+    sys.position[Y_AXIS] = LIMIT_Y_NEG_VALUE * settings.steps_per_mm[Y_AXIS];
+  else if(LIMIT_Y_POS_TYPE == LIMIT_TYPE_HARD)
+    sys.position[Y_AXIS] = LIMIT_Y_POS_VALUE * settings.steps_per_mm[Y_AXIS];
+  if(LIMIT_Z_NEG_TYPE == LIMIT_TYPE_HARD)
+    sys.position[Z_AXIS] = LIMIT_Z_NEG_VALUE * settings.steps_per_mm[Z_AXIS];
+  else if(LIMIT_Z_POS_TYPE == LIMIT_TYPE_HARD)
+    sys.position[Z_AXIS] = LIMIT_Z_POS_VALUE * settings.steps_per_mm[Z_AXIS];
+  // Update planner and interpreter copy
+  gc_set_current_position(sys.position[X_AXIS], sys.position[Y_AXIS],
+      sys.position[Z_AXIS]);
+  plan_set_current_position(sys.position[X_AXIS], sys.position[Y_AXIS],
+      sys.position[Z_AXIS]);
 }

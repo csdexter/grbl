@@ -21,6 +21,7 @@
 */
 
 #include <math.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "config.h"
@@ -44,7 +45,7 @@
 // However, this keeps the memory requirements lower since it doesn't have to call and hold two 
 // plan_buffer_lines in memory. Grbl only has to retain the original line input variables during a
 // backlash segment(s).
-void mc_line(float x, float y, float z, float feed_rate, uint8_t invert_feed_rate)
+void mc_line(float x, float y, float z, float feed_rate, bool invert_feed_rate)
 {
   // TODO: Backlash compensation may be installed here. Only need direction info to track when
   // to insert a backlash line motion(s) before the intended line motion. Requires its own
@@ -80,7 +81,7 @@ void mc_line(float x, float y, float z, float feed_rate, uint8_t invert_feed_rat
 // The arc is approximated by generating a huge number of tiny, linear segments. The length of each 
 // segment is configured in settings.mm_per_arc_segment.  
 void mc_arc(float *position, float *target, float *offset, uint8_t axis_0, uint8_t axis_1, 
-  uint8_t axis_linear, float feed_rate, uint8_t invert_feed_rate, float radius, uint8_t isclockwise)
+  uint8_t axis_linear, float feed_rate, bool invert_feed_rate, float radius, bool isclockwise)
 {      
   float center_axis0 = position[axis_0] + offset[axis_0];
   float center_axis1 = position[axis_1] + offset[axis_1];
