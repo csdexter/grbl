@@ -32,13 +32,13 @@
 
 settings_t settings;
 
-void settings_reset() {
+void settings_reset(void) {
   const settings_t defaults = DEFAULT_SETTINGS;
 
   settings = defaults;
 }
 
-void settings_dump() {
+void settings_dump(void) {
   host_serialconsole_printmessage(_S("$0 = "), true);
   host_serialconsole_printfloat(settings.steps_per_mm[X_AXIS], 4, true);
   host_serialconsole_printmessage(_S(" (steps/mm x)\r\n$1 = "), true);
@@ -52,16 +52,13 @@ void settings_dump() {
   host_serialconsole_printmessage(_S(" (mm/min default seek rate)\r\n$5 = "), true);
   host_serialconsole_printfloat(settings.mm_per_arc_segment, 4, true);
   host_serialconsole_printmessage(_S(" (mm/arc segment)\r\n$6 = "), true);
-  host_serialconsole_printinteger(settings.invert_mask_stepdir, true);
-  host_serialconsole_printmessage(_S(" (step port invert mask. binary = "), true);
-  host_serialconsole_printbinary(settings.invert_mask_stepdir, true);
+  host_serialconsole_printinteger(settings.invert.mask, true);
+  host_serialconsole_printmessage(_S(" (GPIO port invert mask. binary = "), true);
+  host_serialconsole_printbinary((settings.invert.mask >> 8), true);
+  host_serialconsole_printbinary((settings.invert.mask & 0x00FFU), true);
   host_serialconsole_printmessage(_S(")\r\n$7 = "), true);
-  host_serialconsole_printinteger(settings.invert_mask_limit, true);
-  host_serialconsole_printmessage(_S(" (limits port invert mask. binary = "), true);
-  host_serialconsole_printbinary(settings.invert_mask_limit, true);
-  host_serialconsole_printmessage(_S(")\r\n$8 = "), true);
   host_serialconsole_printfloat(settings.acceleration / (60 * 60), 2, true); // Convert from mm/min^2 for human readability
-  host_serialconsole_printmessage(_S(" (acceleration in mm/sec^2)\r\n$9 = "), true);
+  host_serialconsole_printmessage(_S(" (acceleration in mm/sec^2)\r\n$8 = "), true);
   host_serialconsole_printfloat(settings.junction_deviation, 4, true);
   host_serialconsole_printmessage(_S(" (cornering junction deviation in mm)"), true);
   host_serialconsole_printmessage(_S("\r\n'$x=value' to set parameter or just '$' to dump current settings\r\n"), true);
@@ -112,10 +109,9 @@ void settings_store_setting(int parameter, float value) {
     settings.pulse_microseconds = round(value); break;
     case 4: settings.default_seek_rate = value; break;
     case 5: settings.mm_per_arc_segment = value; break;
-    case 6: settings.invert_mask_stepdir = trunc(value); break;
-    case 7: settings.invert_mask_limit = trunc(value); break;
-    case 8: settings.acceleration = value * 60 * 60; break; // Convert to mm/min^2 for grbl internal use.
-    case 9: settings.junction_deviation = fabs(value); break;
+    case 6: settings.invert.mask = trunc(value); break;
+    case 7: settings.acceleration = value * 60 * 60; break; // Convert to mm/min^2 for grbl internal use.
+    case 8: settings.junction_deviation = fabs(value); break;
     default: host_serialconsole_printmessage(_S("Unknown parameter\r\n"), true); return;
   }
   host_settings_store(SETTINGS_SIGNATURE, &settings, sizeof(settings));
@@ -123,7 +119,7 @@ void settings_store_setting(int parameter, float value) {
 }
 
 // Initialize the config subsystem
-void settings_init() {
+void settings_init(void) {
   if(host_settings_fetch(SETTINGS_SIGNATURE, &settings, sizeof(settings)) != HOST_SETTING_OK) {
     host_serialconsole_printmessage(_S("Warning: Failed to read EEPROM settings. Using defaults.\r\n"), true);
     settings_reset();

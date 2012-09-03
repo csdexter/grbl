@@ -24,11 +24,18 @@
 
 #include "nuts_bolts.h"
 
-
-// Some useful constants
-#define STEP_MASK (bit(X_STEP_BIT) | bit(Y_STEP_BIT) | bit(Z_STEP_BIT)) // All step bits
-#define DIRECTION_MASK (bit(X_DIRECTION_BIT) | bit(Y_DIRECTION_BIT) | bit(Z_DIRECTION_BIT)) // All direction bits
-#define STEPPING_MASK (STEP_MASK | DIRECTION_MASK) // All stepping-related bits (step/direction)
+typedef union {
+  struct {
+    uint8_t step_x:1;
+    uint8_t step_y:1;
+    uint8_t step_z:1;
+    uint8_t dir_x:1;
+    uint8_t dir_y:1;
+    uint8_t dir_z:1;
+    uint8_t reserved:2; // Hold the remaining two bits, make sure gcc doesn't get any ideas with them
+  } flags;
+  uint8_t value;
+} stepper_output_t;
 
 // Initialize and setup the stepper motor subsystem
 void st_init();

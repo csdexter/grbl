@@ -1,5 +1,3 @@
-* remove inversion support for STEP pins, maybe #define it out (though no LPT-driven controllers out there need it)
-* decouple DIRECTION from STEP, there's no need (performance or otherwise) for them to be glued together
 * UN-BUG limits.c toggle stuff (does not work in the rare case that STEP lines have been inverted). #define it out OR see below
 * un-lame limits.c (inject blocks instead of stepping by hand [with acceleration], make hardware topology aware [where ma switches?], implement soft limits) OR see below
 * extend stepper.c with hard limits support, this automatically makes limits.c sane (i.e. we can just ask for a X_travel + homing_threshold G00 in the right direction and tell the code we expect the endstop to trip -- instead of doing physics voodoo by injecting blocks and checking the endstop switch from limits.c)

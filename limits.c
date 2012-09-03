@@ -24,6 +24,7 @@
 #include "config.h"
 
 #include "limits.h"
+#include "limits-private.h"
 
 #include "nuts_bolts.h"
 #include "planner.h"
@@ -31,63 +32,78 @@
 #include "stepper.h"
 
 
-void limits_init() {
-  // I/O lines as inputs done by SETUP_IO() in config.h called from main()
+void limits_init(void) {
+  host_gpio_direction(LIMIT_X, HOST_GPIO_DIRECTION_INPUT, HOST_GPIO_MODE_BIT);
+  host_gpio_direction(LIMIT_Y, HOST_GPIO_DIRECTION_INPUT, HOST_GPIO_MODE_BIT);
+  host_gpio_direction(LIMIT_Z, HOST_GPIO_DIRECTION_INPUT, HOST_GPIO_MODE_BIT);
 }
 
 static void homing_cycle(bool x_axis, bool y_axis, bool z_axis, bool reverse_direction, uint32_t microseconds_per_pulse) {
   uint32_t step_delay = microseconds_per_pulse - settings.pulse_microseconds;
-  uint8_t out_bits = DIRECTION_MASK;
-  uint8_t limit_bits;
+  stepper_output_t out_bits;
+  limit_input_t limit_bits;
 
-  if (x_axis) { out_bits |= _BV(X_STEP_BIT); }
-  if (y_axis) { out_bits |= _BV(Y_STEP_BIT); }
-  if (z_axis) { out_bits |= _BV(Z_STEP_BIT); }
+  out_bits.flags.dir_x = true;
+  out_bits.flags.dir_y = true;
+  out_bits.flags.dir_z = true;
+
+  if(x_axis) out_bits.flags.step_x = true;
+  if(y_axis) out_bits.flags.step_y = true;
+  if(z_axis) out_bits.flags.step_z = true;
 
   // Invert direction bits if this is a reverse homing_cycle
-  if (reverse_direction) {
-    out_bits ^= DIRECTION_MASK;
+  if(reverse_direction) {
+    out_bits.flags.dir_x ^= true;
+    out_bits.flags.dir_y ^= true;
+    out_bits.flags.dir_z ^= true;
   }
 
   // Apply the global invert mask
-  out_bits ^= settings.invert_mask_stepdir;
+  out_bits.value ^= settings.invert.masks.stepdir;
 
-  // Set direction pins, can't use |= because we may have 1 -> 0 transitions,
-  // e.g. when reverse_direction is true
-  STEPPING_PORT = (STEPPING_PORT & ~DIRECTION_MASK) | (out_bits & DIRECTION_MASK);
+  host_gpio_write(DIR_X, out_bits.flags.dir_x, HOST_GPIO_MODE_BIT);
+  host_gpio_write(DIR_Y, out_bits.flags.dir_y, HOST_GPIO_MODE_BIT);
+  host_gpio_write(DIR_Z, out_bits.flags.dir_z, HOST_GPIO_MODE_BIT);
 
   for(;;) {
-    limit_bits = LIMIT_PIN;
+    limit_bits.flags.limit_x = host_gpio_read(LIMIT_X, HOST_GPIO_MODE_BIT);
+    limit_bits.flags.limit_y = host_gpio_read(LIMIT_Y, HOST_GPIO_MODE_BIT);
+    limit_bits.flags.limit_z = host_gpio_read(LIMIT_Z, HOST_GPIO_MODE_BIT);
 
-    if (reverse_direction) {
-      // Invert limit_bits if this is a reverse homing_cycle
-      limit_bits ^= LIMIT_MASK;
+    if(reverse_direction) {
+      limit_bits.flags.limit_x ^= true;
+      limit_bits.flags.limit_y ^= true;
+      limit_bits.flags.limit_z ^= true;
     }
 
     // Apply the global invert mask
-    limit_bits ^= settings.invert_mask_limit;
+    limit_bits.value ^= settings.invert.masks.limit;
 
-    if (x_axis && !(limit_bits & _BV(X_LIMIT_BIT))) {
+    if (x_axis && !limit_bits.flags.limit_x) {
       x_axis = false;
-      out_bits ^= _BV(X_STEP_BIT);
+      out_bits.flags.step_x = false;
     }
-    if (y_axis && !(limit_bits & _BV(Y_LIMIT_BIT))) {
+    if (y_axis && !limit_bits.flags.limit_y) {
       y_axis = false;
-      out_bits ^= _BV(Y_STEP_BIT);
+      out_bits.flags.step_y = false;
     }
-    if (z_axis && !(limit_bits & _BV(Z_LIMIT_BIT))) {
+    if (z_axis && !limit_bits.flags.limit_z) {
       z_axis = false;
-      out_bits ^= _BV(Z_STEP_BIT);
+      out_bits.flags.step_z = false;
     }
 
     // Check if we are done
-    if(!(x_axis || y_axis || z_axis)) { return; }
+    if(!(x_axis || y_axis || z_axis)) return;
 
     // Send stepping pulse, can't use |= because we may have 1 -> 0 transitions,
     // e.g. when the STEP lines are inverted
-    STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | (out_bits & STEP_MASK);
+    host_gpio_write(STEP_X, out_bits.flags.step_x, HOST_GPIO_MODE_BIT);
+    host_gpio_write(STEP_Y, out_bits.flags.step_y, HOST_GPIO_MODE_BIT);
+    host_gpio_write(STEP_Z, out_bits.flags.step_z, HOST_GPIO_MODE_BIT);
     host_delay_us(settings.pulse_microseconds);
-    STEPPING_PIN = (out_bits & STEP_MASK); // End pulse via toggle, saves one port access
+    host_gpio_write(STEP_X, settings.invert.flags.step_x, HOST_GPIO_MODE_BIT);
+    host_gpio_write(STEP_Y, settings.invert.flags.step_y, HOST_GPIO_MODE_BIT);
+    host_gpio_write(STEP_Z, settings.invert.flags.step_z, HOST_GPIO_MODE_BIT);
     host_delay_us(step_delay);
   }
   return;

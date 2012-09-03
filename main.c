@@ -1,5 +1,5 @@
 /*
-  main.c - An embedded CNC Controller with rs274/ngc (g-code) support
+  main.c - An embedded CNC Controller with RS274/NGC (G-Code) support
   Part of Grbl
 
   Copyright (c) 2009-2011 Simen Svale Skogsrud
@@ -42,11 +42,9 @@
 system_t sys; 
 
 
-int main(void)
-{
+int main(void) {
   // Initialize system
   host_serialconsole_init(); // Setup serial baud rate and interrupts
-  SETUP_IO(); // Setup pin directions globally
   st_init(); // Setup stepper pins and interrupt timers
   host_sei(); // Enable interrupts
 
@@ -54,19 +52,19 @@ int main(void)
   sys.abort = true;   // Set abort to complete initialization
 
   for(;;) {
-
-    // Execute system reset upon a system abort, where the main program will return to this loop.
-    // Once here, it is safe to re-initialize the system. At startup, the system will automatically
-    // reset to finish the initialization process.
-    if (sys.abort) {
-
-      // Retain last known machine position and work coordinate offset(s). If the system abort
-      // occurred while in motion, machine position is not guaranteed, since a hard stop can cause
-      // the steppers to lose steps. Always perform a feedhold before an abort, if maintaining
-      // accurate machine position is required.
-      // TODO: Report last position and coordinate offset to users to help relocate origins. Future
-      // releases will auto-reset the machine position back to [0,0,0] if an abort is used while 
-      // grbl is moving the machine.
+    // Execute system reset upon a system abort, where the main program will
+    // return to this loop. Once here, it is safe to re-initialize the system.
+    // At startup, the system will automatically reset to finish the
+    // initialization process.
+    if(sys.abort) {
+      // Retain last known machine position and work coordinate offset(s). If
+      // the system abort occurred while in motion, machine position is not
+      // guaranteed, since a hard stop can cause the steppers to lose steps.
+      // Always perform a feed hold before an abort, if maintaining accurate
+      // machine position is required.
+      // TODO: Report last position and coordinate offset to users to help
+      // relocate origins. Future releases will auto-reset the machine position
+      // back to [0,0,0] if an abort is used while grbl is moving the machine.
       int32_t last_position[3];
       float last_coord_system[N_COORDINATE_SYSTEM][3];
       memcpy(last_position, sys.position, sizeof(sys.position)); // last_position[] = sys.position[]
@@ -89,8 +87,8 @@ int main(void)
       // Reload last known machine position and work systems. G92 coordinate offsets are reset.
       memcpy(sys.position, last_position, sizeof(last_position)); // sys.position[] = last_position[]
       memcpy(sys.coord_system, last_coord_system, sizeof(last_coord_system)); // sys.coord_system[] = last_coord_system[]
-      gc_set_current_position(last_position[X_AXIS],last_position[Y_AXIS],last_position[Z_AXIS]);
-      plan_set_current_position(last_position[X_AXIS],last_position[Y_AXIS],last_position[Z_AXIS]);
+      gc_set_current_position(last_position[X_AXIS], last_position[Y_AXIS], last_position[Z_AXIS]);
+      plan_set_current_position(last_position[X_AXIS], last_position[Y_AXIS], last_position[Z_AXIS]);
 
       // Set system runtime defaults
       // TODO: Eventual move to EEPROM from config.h when all of the new settings are worked out. 
@@ -105,5 +103,5 @@ int main(void)
     protocol_process(); // ... process the serial protocol
 
   }
-  return 0;   /* never reached */
+  return 0; /* never reached */
 }

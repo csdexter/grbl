@@ -28,16 +28,19 @@
 // This struct is used when buffering the setup for each linear movement "nominal" values are as specified in 
 // the source g-code and may never actually be reached if acceleration management is active.
 typedef struct {
-  // Fields used by the bresenham algorithm for tracing the line
-  uint8_t  direction_bits;            // The direction bit set for this block (refers to *_DIRECTION_BIT in config.h)
+  // Fields used by the Bresenham algorithm for tracing the line
+  uint8_t dir_x:1;                    // The direction bit set for this block (refers to DIR_* in config.h)
+  uint8_t dir_y:1;
+  uint8_t dir_z:1;
+  uint8_t reserved:6;
   uint32_t steps_x, steps_y, steps_z; // Step count along each axis
-  int32_t  step_event_count;          // The number of step events required to complete this block
+  int32_t step_event_count;           // The number of step events required to complete this block
 
   // Fields used by the motion planner to manage acceleration
-  float nominal_speed;               // The nominal speed for this block in mm/min  
-  float entry_speed;                 // Entry speed at previous-current block junction in mm/min
-  float max_entry_speed;             // Maximum allowable junction entry speed in mm/min
-  float millimeters;                 // The total travel of this block in mm
+  float nominal_speed;                // The nominal speed for this block in mm/min
+  float entry_speed;                  // Entry speed at previous-current block junction in mm/min
+  float max_entry_speed;              // Maximum allowable junction entry speed in mm/min
+  float millimeters;                  // The total travel of this block in mm
   uint8_t recalculate_flag;           // Planner flag to recalculate trapezoids on entry junction
   uint8_t nominal_length_flag;        // Planner flag for nominal speed always reached
 

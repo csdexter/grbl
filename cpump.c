@@ -24,9 +24,9 @@
 #include "config.h"
 
 
-void cpump_init()
-{
+void cpump_init(void) {
 #ifdef CHARGE_PUMP
+  host_gpio_direction(CHARGE_PUMP, HOST_GPIO_DIRECTION_OUTPUT, HOST_GPIO_MODE_BIT);
   host_functiongenerator_start(CHARGE_PUMP, 12500, HOST_FG_SQUARE);
 #endif
 }

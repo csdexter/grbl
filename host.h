@@ -70,6 +70,8 @@ typedef enum {
 /* Host GPIO interface */
 #define HOST_GPIO_MODE_BYTE true
 #define HOST_GPIO_MODE_BIT false
+#define HOST_GPIO_DIRECTION_INPUT false
+#define HOST_GPIO_DIRECTION_OUTPUT true
 /* Outputs are identified by #defines starting with HOST_GPIO_ followed by the
  * short port name as given in the datasheet (e.g. PD for Port D), followed by
  * the bit number in that port, as given in the datasheet */

@@ -23,13 +23,12 @@
 
 #include "nuts_bolts.h"
 
-#define LIMIT_MASK (bit(X_LIMIT_BIT) | bit(Y_LIMIT_BIT) | bit(Z_LIMIT_BIT)) // All limit bits
 
 // initialize the limits module
-void limits_init();
+void limits_init(void);
 
 // perform the homing cycle
-void limits_go_home();
+void limits_go_home(void);
 
 
 #endif

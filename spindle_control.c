@@ -28,19 +28,19 @@
 
 static uint8_t current_direction;
 
-void spindle_stop()
-{
+void spindle_stop(void) {
   /* If we were spinning, we need to wait until all previous moves are executed
    * before stopping. */
   if(current_direction) plan_synchronize();
   host_gpio_write(SPINDLE_ENABLE, false, HOST_GPIO_MODE_BIT);
 }
 
-void spindle_init()
-{
+void spindle_init(void) {
   current_direction = 0;
-  // SPINDLE_ENABLE and SPINDLE_DIRECTION set as outputs by SETUP_IO() in
-  // config.h called from main()
+  host_gpio_direction(SPINDLE_ENABLE, HOST_GPIO_DIRECTION_OUTPUT, HOST_GPIO_MODE_BIT);
+  #ifdef SPINDLE_DIRECTION
+    host_gpio_direction(SPINDLE_DIRECTION, HOST_GPIO_DIRECTION_OUTPUT, HOST_GPIO_MODE_BIT);
+  #endif
   spindle_stop();
 }
 

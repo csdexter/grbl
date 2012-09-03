@@ -35,8 +35,26 @@ typedef struct {
   float steps_per_mm[3];
   uint8_t pulse_microseconds;
   float default_seek_rate;
-  uint8_t invert_mask_stepdir;
-  uint8_t invert_mask_limit;
+  union {
+    uint16_t mask;
+    struct {
+      uint8_t stepdir;
+      uint8_t limit;
+    } masks;
+    struct {
+      uint8_t step_x:1;
+      uint8_t step_y:1;
+      uint8_t step_z:1;
+      uint8_t dir_x:1;
+      uint8_t dir_y:1;
+      uint8_t dir_z:1;
+      uint8_t reserved1:2; // Hold the remaining two bits, make sure gcc doesn't get any ideas with them
+      uint8_t limit_x:1;
+      uint8_t limit_y:1;
+      uint8_t limit_z:1;
+      uint8_t reserved2:5; // Hold the remaining five bits, make sure gcc doesn't get any ideas with them
+    } flags;
+  } invert;
   float mm_per_arc_segment;
   float acceleration;
   float junction_deviation;
@@ -45,18 +63,18 @@ typedef struct {
 extern settings_t settings;
 
 #define DEFAULT_FEED 60.0
-#define DEFAULT_SETTINGS {{200.0, 200.0, 200.0}, 50, 600.0, 0x00, 0x00, 0.1, \
+#define DEFAULT_SETTINGS {{200.0, 200.0, 200.0}, 50, 600.0, {0x0000U}, 0.1, \
   (DEFAULT_FEED * (60 * 60)) / 10.0, 0.05 }
 
 
 // Reset settings to default values
-void settings_reset();
+void settings_reset(void);
 
 // Initialize the configuration subsystem (load settings from EEPROM)
-void settings_init();
+void settings_init(void);
 
 // Print current settings
-void settings_dump();
+void settings_dump(void);
 
 // Handle settings command
 uint8_t settings_execute_line(char *line);
