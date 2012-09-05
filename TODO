@@ -1,5 +1,4 @@
-* UN-BUG limits.c toggle stuff (does not work in the rare case that STEP lines have been inverted). #define it out OR see below
-* un-lame limits.c (inject blocks instead of stepping by hand [with acceleration], make hardware topology aware [where ma switches?], implement soft limits) OR see below
+* un-lame limits.c (inject blocks instead of stepping by hand [with acceleration]) OR see below
 * extend stepper.c with hard limits support, this automatically makes limits.c sane (i.e. we can just ask for a X_travel + homing_threshold G00 in the right direction and tell the code we expect the endstop to trip -- instead of doing physics voodoo by injecting blocks and checking the endstop switch from limits.c)
 * remove obsolete TODOs
 * replace if (sys.abort) { return; } with a function or macro; also investigate if the "sprinkled calls" model should be maintained (process_runtime_command()).
@@ -13,7 +12,6 @@
 * maybe get off Timer2 (just delay after setting the STEP lines), thus enabling SPINDLE_PWM coexistence
 * maybe add SPINDLE_RPM stuff (PWM) (mutually exclusive with charge pump on AVR, always on on ARM)
 * maybe add E_STOP stuff (freeze -- needs to be connected to EXEC_RESET)
-* maybe extend G-code with soft limit support [error/clip]
 * maybe remember that this is a plotter, not a pixel display, and do way better arcs
 * if we get the one above right, maybe implement Bezier and NURBs :-)
 --

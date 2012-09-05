@@ -50,14 +50,13 @@
 // Uncomment the next line to enable support for a Stepper Disable control
 // line, for drivers that have/use one (this is always true logic, level [i.e.
 // 0 is Power On and 1 is Power Off]).
-// Please note that disabling this will also disable STEPPER_IDLE_LOCK_TIME
-// below since we cannot lock the steppers if we have no control over their
-// active status.
+// NOTE: disabling this will also disable STEPPER_IDLE_LOCK_TIME below since we
+// cannot lock the steppers if we have no control over their active status.
 //TODO: whenever we will support axis brakes/clamps, update the above notice
-// Please note that on some stepper drivers/controllers, the Enable/Disable line
-// may reset state of the driver chips which means the motors will advance to
-// the next full step the next time they're enabled (i.e. microstepping state
-// is lost) -- you may not want to use it if that is the case.
+// NOTE: on some stepper drivers/controllers, the Enable/Disable line may reset
+// state of the driver chips which means the motors will advance to the next
+// full step the next time they're enabled (i.e. microstepping state is lost)
+// -- you may not want to use it if that is the case.
 //#define STEPPERS_DISABLE HOST_GPIO_PB0
 
 // Define pin-assignments for spindle control (this is always active-high, level
@@ -75,7 +74,7 @@
 // controller. The pin is hardcoded because the signal is generated in hardware
 // using Timer 0, Channel A which is, in turn, tied to PD6 (which corresponds
 // to Digital 6 on the Arduino).
-// Please note the rest of grbl uses Timers 1 and 2 so the only other option is
+// NOTE: the rest of grbl uses Timers 1 and 2 so the only other option is
 // OC0B on PD5 (Arduino Digital 5).
 #define CHARGE_PUMP HOST_GPIO_PD6 // Uno Digital Pin 6
 

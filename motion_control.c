@@ -34,43 +34,54 @@
 #include "stepper.h"
 
 
-// Execute linear motion in absolute millimeter coordinates. Feed rate given in millimeters/second
-// unless invert_feed_rate is true. Then the feed_rate means that the motion should be completed in
-// (1 minute)/feed_rate time.
-// NOTE: This is the primary gateway to the grbl planner. All line motions, including arc line 
-// segments, must pass through this routine before being passed to the planner. The seperation of
-// mc_line and plan_buffer_line is done primarily to make backlash compensation integration simple
-// and direct.
-// TODO: Check for a better way to avoid having to push the arguments twice for non-backlash cases.
-// However, this keeps the memory requirements lower since it doesn't have to call and hold two 
-// plan_buffer_lines in memory. Grbl only has to retain the original line input variables during a
-// backlash segment(s).
-void mc_line(float x, float y, float z, float feed_rate, bool invert_feed_rate)
-{
-  // TODO: Backlash compensation may be installed here. Only need direction info to track when
-  // to insert a backlash line motion(s) before the intended line motion. Requires its own
-  // plan_check_full_buffer() and check for system abort loop. Also for position reporting 
-  // backlash steps will need to be also tracked. Not sure what the best strategy is for this,
-  // i.e. keep the planner independent and do the computations in the status reporting, or let
-  // the planner handle the position corrections. The latter may get complicated.
-
+// Execute linear motion in absolute millimeter coordinates. Feed rate given in
+// millimeters/second unless invert_feed_rate is true. Then the feed_rate means
+// that the motion should be completed in (1 minute)/feed_rate time.
+// NOTE: This is the primary gateway to the grbl planner. All line motions,
+//       including arc line segments, must pass through this routine before
+//       being passed to the planner. The separation of mc_line and
+//       plan_buffer_line is done primarily to make backlash compensation
+//       integration simple and direct.
+// NOTE: There will be no backlash compensation, the hardware we're targeting
+//       has, by definition, no backlash (it's impossible to go further and
+//       then backward when taking an inside cut, for example)
+void mc_line(float x, float y, float z, float feed_rate, bool invert_feed_rate) {
   // If the buffer is full: good! That means we are well ahead of the robot. 
   // Remain in this loop until there is room in the buffer.
   do {
     execute_runtime(); // Check for any run-time commands
-    if (sys.abort) { return; } // Bail, if system abort.
-  } while ( plan_check_full_buffer() );
+    if(sys.abort) return; // Bail, if system abort.
+  } while (plan_check_full_buffer());
+
+  #ifdef LIMIT_SOFT
+    // Clip the move if it falls outside our physical extents
+    if(LIMIT_X_NEG_TYPE == LIMIT_TYPE_SOFT && x < LIMIT_X_NEG_VALUE)
+      x = LIMIT_X_NEG_VALUE;
+    if(LIMIT_X_POS_TYPE == LIMIT_TYPE_SOFT && x > LIMIT_X_POS_VALUE)
+      x = LIMIT_X_POS_VALUE;
+    if(LIMIT_Y_NEG_TYPE == LIMIT_TYPE_SOFT && y < LIMIT_Y_NEG_VALUE)
+      y = LIMIT_Y_NEG_VALUE;
+    if(LIMIT_Y_POS_TYPE == LIMIT_TYPE_SOFT && y > LIMIT_Y_POS_VALUE)
+      y = LIMIT_Y_POS_VALUE;
+    if(LIMIT_Z_NEG_TYPE == LIMIT_TYPE_SOFT && z < LIMIT_Z_NEG_VALUE)
+      z = LIMIT_Z_NEG_VALUE;
+    if(LIMIT_Z_POS_TYPE == LIMIT_TYPE_SOFT && z > LIMIT_Z_POS_VALUE)
+      z = LIMIT_Z_POS_VALUE;
+  #endif
+
   plan_buffer_line(x, y, z, feed_rate, invert_feed_rate);
   
-  // Auto-cycle start immediately after planner finishes. Enabled/disabled by grbl settings. During 
-  // a feed hold, auto-start is disabled momentarily until the cycle is resumed by the cycle-start 
-  // runtime command.
-  // NOTE: This is allows the user to decide to exclusively use the cycle start runtime command to
-  // begin motion or let grbl auto-start it for them. This is useful when: manually cycle-starting
-  // when the buffer is completely full and primed; auto-starting, if there was only one g-code 
-  // command sent during manual operation; or if a system is prone to buffer starvation, auto-start
-  // helps make sure it minimizes any dwelling/motion hiccups and keeps the cycle going. 
-  if (sys.auto_start) { st_cycle_start(); }
+  // Auto-cycle start immediately after planner finishes. Enabled/disabled by
+  // grbl settings. During a feed hold, auto-start is disabled momentarily until
+  // the cycle is resumed by the cycle-start runtime command.
+  // NOTE: This allows the user to decide to exclusively use the cycle start
+  // runtime command to begin motion or let grbl auto-start it for them. This is
+  // useful when: manually cycle-starting when the buffer is completely full and
+  // primed; auto-starting, if there was only one g-code command sent during
+  // manual operation; or if a system is prone to buffer starvation, auto-start
+  // helps make sure it minimizes any dwelling/motion hiccups and keeps the
+  // cycle going.
+  if(sys.auto_start) st_cycle_start();
 }
 
 
@@ -169,9 +180,6 @@ void mc_arc(float *position, float *target, float *offset, uint8_t axis_0, uint8
     arc_target[axis_1] = center_axis1 + r_axis1;
     arc_target[axis_linear] += linear_per_segment;
     mc_line(arc_target[X_AXIS], arc_target[Y_AXIS], arc_target[Z_AXIS], feed_rate, invert_feed_rate);
-    
-    // Bail mid-circle on system abort. Runtime command check already performed by mc_line.
-    if (sys.abort) { return; }
   }
   // Ensure last segment arrives at target location.
   mc_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], feed_rate, invert_feed_rate);

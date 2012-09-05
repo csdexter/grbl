@@ -44,11 +44,11 @@
 // G-code [e.g. if you declare a 100mm axis as [-50, 50] and then try to move to
 // 55, you'll get an error since the code will think you're trying to go beyond
 // the limits].
-// Please note the current implementation supports at most 3 limit switches, at
-// most one per axis.
-// Please note that configuring for no endstops on any axis means the code will
-// have no means to recalibrate that axis.
-#define LIMIT_HARD // Support for hardware endswitches
+// NOTE: the current implementation supports at most 3 limit switches, at most
+//       one per axis.
+// NOTE: configuring for no endstops on any axis means the code will have no
+//       means to recalibrate that axis.
+#define LIMIT_HARD // Support for hardware limit switches
 #define LIMIT_SOFT // Support for software enforced limits
 #define LIMIT_TYPE_SOFT 0
 #define LIMIT_TYPE_HARD 1
@@ -100,7 +100,7 @@
 //       this parameter is machine dependent, so it's advised to set this only
 //       as high as needed.
 // Approximate successful values can range from 30L to 100L or more.
-#define ACCELERATION_TICKS_PER_SECOND 50L
+#define ACCELERATION_TICKS_PER_SECOND 75L
 
 // Minimum planner junction speed. Sets the default minimum speed the planner plans for at the end
 // of the buffer and all stops. This should not be much greater than zero and should only be changed
@@ -111,7 +111,7 @@
 // slower than this value, except when sleeping. This parameter overrides the minimum planner speed.
 // This is primarily used to guarantee that the end of a movement is always reached and not stop to
 // never reach its target. This parameter should always be greater than zero.
-#define MINIMUM_STEPS_PER_MINUTE 800 // (steps/min) - Integer value only
+#define MINIMUM_STEPS_PER_MINUTE 600 // (steps/min) - Integer value only
 
 // Number of arc generation iterations by small angle approximation before exact arc trajectory 
 // correction. This parameter maybe decreased if there are issues with the accuracy of the arc
@@ -129,16 +129,6 @@
 
 // ---------------------------------------------------------------------------------------
 // FOR ADVANCED USERS ONLY: 
-
-// Toggles XON/XOFF software flow control for serial communications. Not officially supported
-// due to problems involving the Atmega8U2 USB-to-serial chips on current Arduinos. The firmware
-// on these chips do not support XON/XOFF flow control characters and the intermediate buffer 
-// in the chips cause latency and overflow problems with standard terminal programs. However, 
-// using specifically-programmed UI's to manage this latency problem has been confirmed to work.
-// As well as, older FTDI FT232RL-based Arduinos(Duemilanove) are known to work with standard
-// terminal programs since their firmware correctly manage these XON/XOFF characters. In any
-// case, please report any successes to grbl administrators!
-#define ENABLE_XONXOFF 0 // Boolean. Default disabled.
 
 // Creates a delay between the direction pin setting and corresponding step pulse by creating
 // another interrupt (Timer2 compare) to manage it. The main Grbl interrupt (Timer1 compare) 
