@@ -20,7 +20,7 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* The ring buffer implementation gleaned from the wiring_serial library by David A. Mellis. */
+/* Ring buffer implementation gleaned from the wiring_serial library by David A. Mellis. */
 
 #include <math.h>
 #include <stdbool.h>
@@ -36,9 +36,6 @@
 #include "settings.h"
 
 
-// The number of linear motions that can be in the plan at any give time
-#define BLOCK_BUFFER_SIZE 18
-
 static block_t block_buffer[BLOCK_BUFFER_SIZE];  // A ring buffer for motion instructions
 static volatile uint8_t block_buffer_head;       // Index of the next block to be pushed
 static volatile uint8_t block_buffer_tail;       // Index of the block to process now
@@ -46,23 +43,22 @@ static uint8_t next_buffer_head;                 // Index of the next buffer hea
 
 // Define planner variables
 typedef struct {
-  int32_t position[3];             // The planner position of the tool in absolute steps. Kept separate
-                                   // from g-code position for movements requiring multiple line motions,
-                                   // i.e. arcs, canned cycles, and backlash compensation.
+  int32_t position[3];            // The planner position of the tool in absolute steps. Kept separate
+                                  // from g-code position for movements requiring multiple line motions,
+                                  // i.e. arcs, canned cycles, and backlash compensation.
   float previous_unit_vec[3];     // Unit vector of previous path line segment
   float previous_nominal_speed;   // Nominal speed of previous path line segment
 } planner_t;
 static planner_t pl;
 
-// Returns the index of the next block in the ring buffer
-// NOTE: Removed modulo (%) operator, which uses an expensive divide and multiplication.
-static uint8_t next_block_index(uint8_t block_index) 
-{
-  block_index++;
-  if (block_index == BLOCK_BUFFER_SIZE) { block_index = 0; }
-  return(block_index);
-}
 
+// Returns the index of the next block in the ring buffer
+static uint8_t next_block_index(uint8_t block_index) {
+  block_index++;
+  if(block_index == BLOCK_BUFFER_SIZE) block_index = 0;
+
+  return block_index;
+}
 
 // Returns the index of the previous block in the ring buffer
 static uint8_t prev_block_index(uint8_t block_index) 
@@ -72,14 +68,12 @@ static uint8_t prev_block_index(uint8_t block_index)
   return(block_index);
 }
 
-
 // Calculates the distance (not time) it takes to accelerate from initial_rate to target_rate using the 
 // given acceleration:
-static float estimate_acceleration_distance(float initial_rate, float target_rate, float acceleration) 
-{
-  return( (target_rate*target_rate-initial_rate*initial_rate)/(2*acceleration) );
+static float estimate_acceleration_distance(float initial_rate,
+    float target_rate, float acceleration) {
+  return (target_rate * target_rate - initial_rate * initial_rate) / (2 * acceleration);
 }
-
 
 /*                        + <- some maximum rate we don't care about
                          /|\
@@ -94,22 +88,20 @@ static float estimate_acceleration_distance(float initial_rate, float target_rat
 // you started at speed initial_rate and accelerated until this point and want to end at the final_rate after
 // a total travel of distance. This can be used to compute the intersection point between acceleration and
 // deceleration in the cases where the trapezoid has no plateau (i.e. never reaches maximum speed)
-static float intersection_distance(float initial_rate, float final_rate, float acceleration, float distance) 
-{
-  return( (2*acceleration*distance-initial_rate*initial_rate+final_rate*final_rate)/(4*acceleration) );
+static float intersection_distance(float initial_rate, float final_rate,
+    float acceleration, float distance) {
+  return (2 * acceleration * distance - initial_rate * initial_rate + final_rate * final_rate) / (4 * acceleration);
 }
-
             
 // Calculates the maximum allowable speed at this point when you must be able to reach target_velocity
 // using the acceleration within the allotted distance.
-// NOTE: sqrt() reimplimented here from prior version due to improved planner logic. Increases speed
+// NOTE: sqrt() reimplemented here from prior version due to improved planner logic. Increases speed
 // in time critical computations, i.e. arcs or rapid short lines from curves. Guaranteed to not exceed
 // BLOCK_BUFFER_SIZE calls per planner cycle.
-static float max_allowable_speed(float acceleration, float target_velocity, float distance) 
-{
-  return( sqrt(target_velocity*target_velocity-2*acceleration*distance) );
+static float max_allowable_speed(float acceleration, float target_velocity,
+    float distance) {
+  return sqrt(target_velocity * target_velocity - 2 * acceleration * distance);
 }
-
 
 // The kernel called by planner_recalculate() when scanning the plan from last to first entry.
 static void planner_reverse_pass_kernel(block_t *previous, block_t *current, block_t *next) 

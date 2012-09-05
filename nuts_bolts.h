@@ -41,9 +41,7 @@
 #define bit(n) (1 << n) 
 #define bit_true(x,mask) (x |= mask)
 #define bit_false(x,mask) (x &= ~mask)
-#define bit_toggle(x,mask) (x ^= mask)
-#define bit_istrue(x,mask) ((x & mask) != 0)
-#define bit_isfalse(x,mask) ((x & mask) == 0)
+#define bit_istrue(x,mask) ((bool)(x & mask))
 
 // Define system executor bit map. Used internally by runtime protocol as
 // runtime command flags, which notifies the main program to execute the
@@ -63,20 +61,18 @@
 
 // Define global system variables
 typedef struct {
-  uint8_t abort:1;                 // System abort flag. Forces exit back to main loop for reset.
-  uint8_t feed_hold:1;             // Feed hold flag. Held true during feed hold. Released when ready to resume.
-  uint8_t auto_start:1;            // Planner auto-start flag. Toggled off during feed hold. Defaulted by settings.
-  uint8_t reserved_flags1:5;       // Hold the other 5 bits, make sure the compiler doesn't get ideas about them
+  uint8_t abort:1;               // System abort flag. Forces exit back to main loop for reset.
+  uint8_t feed_hold:1;           // Feed hold flag. Held true during feed hold. Released when ready to resume.
+  uint8_t auto_start:1;          // Planner auto-start flag. Toggled off during feed hold. Defaulted by settings.
+  uint8_t reserved_flags1:5;     // Hold the other 5 bits, make sure gcc doesn't get ideas about them
   int32_t position[3];           // Real-time machine (aka home) position vector in steps. 
                                  // NOTE: This may need to be a volatile variable, if problems arise. 
   uint8_t coord_select;          // Active work coordinate system number. Default: 0=G54.
-  float coord_system[N_COORDINATE_SYSTEM][3]; // Work coordinate systems (G54+). Stores offset from
-                                 // absolute machine position in mm.
+  float coord_system[N_COORDINATE_SYSTEM][3]; // Work coordinate systems (G54+). Stores offset from absolute machine position in mm.
                                  // Rows: Work system number (0=G54,1=G55,...5=G59), Columns: XYZ Offsets
-  float coord_offset[3];         // Retains the G92 coordinate offset (work coordinates) relative to
-                                 // machine zero in mm.
+  float coord_offset[3];         // Retains the G92 coordinate offset (work coordinates) relative to machine zero in mm.
   volatile uint8_t cycle_start;  // Cycle start flag. Set by stepper subsystem or main program.
-  volatile uint8_t execute;      // Global system runtime executor bitflag variable. See EXEC bitmasks.
+  volatile uint8_t execute;      // Global system runtime executor bit flag variable. See EXEC bitmasks.
 } system_t;
 extern system_t sys;
 

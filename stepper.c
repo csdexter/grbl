@@ -54,7 +54,7 @@ static volatile uint8_t busy;        // True when OCIE1A is being serviced. Used
 //   |               BLOCK 1            |      BLOCK 2          |    d
 //
 //                           time ----->
-/* The trapezoid is the shape the speed curve over time. It starts at
+/* The trapezoid is the shape of the speed curve over time. It starts at
  * block->initial_rate, accelerates by block->rate_delta during the first
  * block->accelerate_until step_events_completed, then keeps going at constant
  * speed until step_events_completed reaches block->decelerate_after after which
@@ -62,7 +62,53 @@ static volatile uint8_t busy;        // True when OCIE1A is being serviced. Used
  * The slope of acceleration is always +/- block->rate_delta and is applied at
  * a constant rate following the midpoint rule by the trapezoid generator, which
  * is called ACCELERATION_TICKS_PER_SECOND times per second. */
-static void set_step_events_per_minute(uint32_t steps_per_minute);
+
+// Configures the prescaler and ceiling of timer 1 to produce the given rate as
+// accurately as possible. Returns the actual number of cycles per interrupt
+static uint32_t config_step_timer(uint32_t cycles) {
+  uint16_t ceiling;
+  uint16_t prescaler;
+  uint32_t actual_cycles;
+
+  if(cycles <= 0xFFFFL) {
+    ceiling = cycles;
+    prescaler = bit(CS10); // prescaler: 1
+    actual_cycles = ceiling;
+  } else if(cycles <= 0x7FFFFL) {
+    ceiling = cycles >> 3;
+    prescaler = bit(CS11); // prescaler: 1/8
+    actual_cycles = ceiling * 8L;
+  } else if(cycles <= 0x3FFFFFL) {
+    ceiling =  cycles >> 6;
+    prescaler = bit(CS10) | bit(CS11); // prescaler: 1/64
+    actual_cycles = ceiling * 64L;
+  } else if(cycles <= 0xFFFFFFL) {
+    ceiling =  (cycles >> 8);
+    prescaler = bit(CS12); // prescaler: 1/256
+    actual_cycles = ceiling * 256L;
+  } else if(cycles <= 0x3FFFFFFL) {
+    ceiling = (cycles >> 10);
+    prescaler = bit(CS12) | bit(CS10); // prescaler: 1/1024
+    actual_cycles = ceiling * 1024L;
+  } else {
+    // Okay, that was slower than we actually go. Just set the slowest speed
+    ceiling = 0xFFFF;
+    prescaler = bit(CS12) | bit(CS10);
+    actual_cycles = 0xFFFFL * 1024;
+  }
+
+  // Set prescaler
+  TCCR1B = (TCCR1B & ~(bit(CS21) | bit(CS11) | bit(CS10))) | prescaler;
+  // Set ceiling
+  host_timer_set_compare(1, HOST_TIMER_CHANNEL_A, ceiling);
+
+  return actual_cycles;
+}
+
+static void set_step_events_per_minute(uint32_t steps_per_minute) {
+  if(steps_per_minute < MINIMUM_STEPS_PER_MINUTE) steps_per_minute = MINIMUM_STEPS_PER_MINUTE;
+  st.cycles_per_step_event = config_step_timer((F_CPU * 60) / steps_per_minute);
+}
 
 // Stepper state initialization
 static void st_wake_up(void) {
@@ -71,9 +117,11 @@ static void st_wake_up(void) {
   // Initialize step pulse timing from settings. Here to ensure updating after re-writing.
   #if STEP_PULSE_DELAY > 0
     // Set total step pulse time after direction pin set. Ad-hoc computation from oscilloscope.
-    step_pulse_time = -(((settings.pulse_microseconds+STEP_PULSE_DELAY-2)*TICKS_PER_MICROSECOND) >> 3);
+    step_pulse_time =
+        -(((settings.pulse_microseconds + STEP_PULSE_DELAY - 2) * TICKS_PER_MICROSECOND) >> 3);
     // Set delay between direction pin write and step command.
-    OCR2A = -(((settings.pulse_microseconds)*TICKS_PER_MICROSECOND) >> 3);
+    host_timer_set_compare(2, HOST_TIMER_CHANNEL_A,
+        -((settings.pulse_microseconds * TICKS_PER_MICROSECOND) >> 3));
   #else // Normal operation
     // Set step pulse time. Ad-hoc computation from oscilloscope. Uses two's complement.
     step_pulse_time = -(((settings.pulse_microseconds - 2) * TICKS_PER_MICROSECOND) >> 3);
@@ -83,13 +131,13 @@ static void st_wake_up(void) {
     host_gpio_write(STEPPERS_DISABLE, false, HOST_GPIO_MODE_BIT);
   #endif
   // Enable stepper driver interrupt
-  TIMSK1 |= bit(OCIE1A);
+  host_timer_enable_interrupt(1, HOST_TIMER_INTERRUPT_COMPARE_A);
 }
 
 // Stepper shutdown
 void st_go_idle(void) {
   // Disable stepper driver interrupt
-  TIMSK1 &= ~bit(OCIE1A);
+  host_timer_disable_interrupt(1, HOST_TIMER_INTERRUPT_COMPARE_A);
 
   #ifdef STEPPERS_DISABLE
     // Force stepper dwell to lock axes for a defined amount of time to ensure the axes come to a complete
@@ -353,61 +401,13 @@ void st_init(void) {
   // Configure Timer 2
   TCCR2A = 0; // Normal operation
   TCCR2B = 0; // Disable timer until needed.
-  TIMSK2 = bit(TOIE2); // ONLY TOIE2, unless the below compiles
-
+  host_timer_enable_interrupt(2, HOST_TIMER_INTERRUPT_OVERFLOW);
   #if STEP_PULSE_DELAY > 0
-    TIMSK2 |= bit(OCIE2A); // Add Timer2 Compare Match A interrupt
+    host_timer_enable_interrupt(2, HOST_TIMER_INTERRUPT_COMPARE_A);
   #endif
 
   // Start in the idle state
   st_go_idle();
-}
-
-// Configures the prescaler and ceiling of timer 1 to produce the given rate as
-// accurately as possible. Returns the actual number of cycles per interrupt
-static uint32_t config_step_timer(uint32_t cycles) {
-  uint16_t ceiling;
-  uint16_t prescaler;
-  uint32_t actual_cycles;
-
-  if (cycles <= 0xffffL) {
-    ceiling = cycles;
-    prescaler = bit(CS10); // prescaler: 1
-    actual_cycles = ceiling;
-  } else if (cycles <= 0x7ffffL) {
-    ceiling = cycles >> 3;
-    prescaler = bit(CS11); // prescaler: 1/8
-    actual_cycles = ceiling * 8L;
-  } else if (cycles <= 0x3fffffL) {
-    ceiling =  cycles >> 6;
-    prescaler = bit(CS10) | bit(CS11); // prescaler: 1/64
-    actual_cycles = ceiling * 64L;
-  } else if (cycles <= 0xffffffL) {
-    ceiling =  (cycles >> 8);
-    prescaler = bit(CS12); // prescaler: 1/256
-    actual_cycles = ceiling * 256L;
-  } else if (cycles <= 0x3ffffffL) {
-    ceiling = (cycles >> 10);
-    prescaler = bit(CS12) | bit(CS10); // prescaler: 1/1024
-    actual_cycles = ceiling * 1024L;
-  } else {
-    // Okay, that was slower than we actually go. Just set the slowest speed
-    ceiling = 0xffff;
-    prescaler = bit(CS12) | bit(CS10);
-    actual_cycles = 0xffff * 1024;
-  }
-
-  // Set prescaler
-  TCCR1B = (TCCR1B & ~(bit(CS21) | bit(CS11) | bit(CS10))) | prescaler;
-  // Set ceiling
-  OCR1A = ceiling;
-
-  return actual_cycles;
-}
-
-static void set_step_events_per_minute(uint32_t steps_per_minute) {
-  if(steps_per_minute < MINIMUM_STEPS_PER_MINUTE) steps_per_minute = MINIMUM_STEPS_PER_MINUTE;
-  st.cycles_per_step_event = config_step_timer((F_CPU * 60) / steps_per_minute);
 }
 
 // Planner external interface to start stepper interrupt and execute the blocks

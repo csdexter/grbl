@@ -65,6 +65,9 @@
 #define LIMIT_Z_POS_TYPE LIMIT_TYPE_HARD
 #define LIMIT_Z_POS_VALUE 110.0
 
+// The number of linear motions that can be in the plan at any given time
+#define BLOCK_BUFFER_SIZE 24
+
 // Specifies the number of work coordinate systems grbl will support (G54-G59).
 // This parameter must be 1 or greater, currently supporting up to a value of 6.
 #define N_COORDINATE_SYSTEM 1

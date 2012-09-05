@@ -194,6 +194,10 @@ bool host_serialconsole_printfloat(float n, uint8_t precision, bool block);
 #define ___avr_cs_of_output(timer,bit) CS ## timer ## bit
 #define __avr_cs_of_output(timer,bit) ___avr_cs_of_output(timer,bit)
 #define _avr_cs_of_output(output,bit) __avr_cs_of_output(_avr_timer_of_output(output),bit)
+#define ___avr_toie_of_timer(timer) TOIE ## timer
+#define __avr_toie_of_timer(timer) ___avr_toie_of_timer(timer)
+#define ___avr_ocie_of_timer(timer,channel) OCIE ## timer ## channel
+#define __avr_ocie_of_timer(timer,channel) ___avr_ocie_of_timer(timer,channel)
 
 /* Host GPIO interface */
 #define host_bit_of_output(output) _avr_bit_of_output(output)
@@ -228,6 +232,24 @@ bool host_serialconsole_printfloat(float n, uint8_t precision, bool block);
 #define HOST_GPIO_ARDUINO_A3 HOST_GPIO_PC3
 #define HOST_GPIO_ARDUINO_A4 HOST_GPIO_PC4
 #define HOST_GPIO_ARDUINO_A5 HOST_GPIO_PC5
+
+/* Host Timer interface */
+#define HOST_TIMER_CHANNEL_A A
+#define HOST_TIMER_CHANNEL_B B
+#define HOST_TIMER_INTERRUPT_OVERFLOW 0
+#define HOST_TIMER_INTERRUPT_COMPARE_A 1
+#define HOST_TIMER_INTERRUPT_COMPARE_B 2
+#define host_timer_set_compare(timer,channel,value) __avr_ocr_of_output(timer,channel) = value
+#define host_timer_enable_interrupt(timer,which) \
+  __avr_timsk_of_output(timer) |= \
+  (which == HOST_TIMER_INTERRUPT_OVERFLOW ? _BV(__avr_toie_of_timer(timer)) : \
+  (which == HOST_TIMER_INTERRUPT_COMPARE_A ? _BV(__avr_ocie_of_timer(timer, A)) : \
+  _BV(__avr_ocie_of_timer(timer, B))))
+#define host_timer_disable_interrupt(timer,which) \
+  __avr_timsk_of_output(timer) &= \
+  (which == HOST_TIMER_INTERRUPT_OVERFLOW ? ~_BV(__avr_toie_of_timer(timer)) : \
+  (which == HOST_TIMER_INTERRUPT_COMPARE_A ? ~_BV(__avr_ocie_of_timer(timer, A)) : \
+  ~_BV(__avr_ocie_of_timer(timer, B))))
 
 /* Starts generating the given waveform at the given frequency on the given
  * output. Output is a host-specific identifier. */
