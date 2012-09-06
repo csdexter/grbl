@@ -33,6 +33,8 @@
 
 /* Host-specific interrupt enable */
 #define host_sei() sei()
+/* Host-specific interrupt vector declaration */
+#define HOST_INTERRUPT(x) ISR(x)
 
 /* Host-specific delays */
 void host_delay_ms(uint16_t ms);
@@ -194,11 +196,6 @@ bool host_serialconsole_printfloat(float n, uint8_t precision, bool block);
 #define ___avr_cs_of_output(timer,bit) CS ## timer ## bit
 #define __avr_cs_of_output(timer,bit) ___avr_cs_of_output(timer,bit)
 #define _avr_cs_of_output(output,bit) __avr_cs_of_output(_avr_timer_of_output(output),bit)
-#define ___avr_toie_of_timer(timer) TOIE ## timer
-#define __avr_toie_of_timer(timer) ___avr_toie_of_timer(timer)
-#define ___avr_ocie_of_timer(timer,channel) OCIE ## timer ## channel
-#define __avr_ocie_of_timer(timer,channel) ___avr_ocie_of_timer(timer,channel)
-
 /* Host GPIO interface */
 #define host_bit_of_output(output) _avr_bit_of_output(output)
 #define host_gpio_direction(output,direction,mode) \
@@ -234,37 +231,135 @@ bool host_serialconsole_printfloat(float n, uint8_t precision, bool block);
 #define HOST_GPIO_ARDUINO_A5 HOST_GPIO_PC5
 
 /* Host Timer interface */
+typedef struct {
+    uint16_t divisor;
+    uint8_t flags;
+} THostTimerPrescaler;
 #define HOST_TIMER_CHANNEL_A A
 #define HOST_TIMER_CHANNEL_B B
-#define HOST_TIMER_INTERRUPT_OVERFLOW 0
-#define HOST_TIMER_INTERRUPT_COMPARE_A 1
-#define HOST_TIMER_INTERRUPT_COMPARE_B 2
+#define HOST_TIMER_INTERRUPT_OVERFLOW_flag __avr_toie_of_timer
+#define HOST_TIMER_INTERRUPT_OVERFLOW_vector OVF
+#define HOST_TIMER_INTERRUPT_COMPARE_A_flag __avr_ocie_of_timer_helperA
+#define HOST_TIMER_INTERRUPT_COMPARE_A_vector COMPA
+#define HOST_TIMER_INTERRUPT_COMPARE_B_flag __avr_ocie_of_timer_helperB
+#define HOST_TIMER_INTERRUPT_COMPARE_B_vector COMPB
+#define HOST_TIMER_PRESCALER_COUNT_0 5
+#define HOST_TIMER_PRESCALER_0_0 0x00
+#define HOST_TIMER_PRESCALER_0_1 _BV(__avr_cs_of_output(0,0))
+#define HOST_TIMER_PRESCALER_0_8 _BV(__avr_cs_of_output(0,1))
+#define HOST_TIMER_PRESCALER_0_64 _BV(__avr_cs_of_output(0,0)) | _BV(__avr_cs_of_output(0,1))
+#define HOST_TIMER_PRESCALER_0_256 _BV(__avr_cs_of_output(0,2))
+#define HOST_TIMER_PRESCALER_0_1024 _BV(__avr_cs_of_output(0,0)) | _BV(__avr_cs_of_output(0,2))
+#define HOST_TIMER_PRESCALERS_0 {\
+    {1, HOST_TIMER_PRESCALER_0_1},\
+    {8, HOST_TIMER_PRESCALER_0_8},\
+    {64, HOST_TIMER_PRESCALER_0_64},\
+    {256, HOST_TIMER_PRESCALER_0_256},\
+    {1024, HOST_TIMER_PRESCALER_0_1024}}
+#define HOST_TIMER_PRESCALER_COUNT_1 5
+#define HOST_TIMER_PRESCALER_1_0 0x00
+#define HOST_TIMER_PRESCALER_1_1 _BV(__avr_cs_of_output(1,0))
+#define HOST_TIMER_PRESCALER_1_8 _BV(__avr_cs_of_output(1,1))
+#define HOST_TIMER_PRESCALER_1_64 _BV(__avr_cs_of_output(1,0)) | _BV(__avr_cs_of_output(1,1))
+#define HOST_TIMER_PRESCALER_1_256 _BV(__avr_cs_of_output(1,2))
+#define HOST_TIMER_PRESCALER_1_1024 _BV(__avr_cs_of_output(1,0)) | _BV(__avr_cs_of_output(1,2))
+#define HOST_TIMER_PRESCALERS_1 {\
+    {1, HOST_TIMER_PRESCALER_1_1},\
+    {8, HOST_TIMER_PRESCALER_1_8},\
+    {64, HOST_TIMER_PRESCALER_1_64},\
+    {256, HOST_TIMER_PRESCALER_1_256},\
+    {1024, HOST_TIMER_PRESCALER_1_1024}}
+#define HOST_TIMER_PRESCALER_COUNT_2 7
+#define HOST_TIMER_PRESCALER_2_0 0x00
+#define HOST_TIMER_PRESCALER_2_1 _BV(__avr_cs_of_output(2,0))
+#define HOST_TIMER_PRESCALER_2_8 _BV(__avr_cs_of_output(2,1))
+#define HOST_TIMER_PRESCALER_2_32 _BV(__avr_cs_of_output(2,0)) | _BV(__avr_cs_of_output(2,1))
+#define HOST_TIMER_PRESCALER_2_64 _BV(__avr_cs_of_output(2,2))
+#define HOST_TIMER_PRESCALER_2_128 _BV(__avr_cs_of_output(2,0)) | _BV(__avr_cs_of_output(2,2))
+#define HOST_TIMER_PRESCALER_2_256 _BV(__avr_cs_of_output(2,1)) | _BV(__avr_cs_of_output(2,2))
+#define HOST_TIMER_PRESCALER_2_1024 _BV(__avr_cs_of_output(2,0)) | _BV(__avr_cs_of_output(2,1)) | _BV(__avr_cs_of_output(2,2))
+#define HOST_TIMER_PRESCALERS_2 {\
+    {1, HOST_TIMER_PRESCALER_2_1},\
+    {8, HOST_TIMER_PRESCALER_2_8},\
+    {32, HOST_TIMER_PRESCALER_2_32},\
+    {64, HOST_TIMER_PRESCALER_2_64},\
+    {128, HOST_TIMER_PRESCALER_2_128},\
+    {256, HOST_TIMER_PRESCALER_2_256},\
+    {1024, HOST_TIMER_PRESCALER_2_1024}}
+#define HOST_TIMER_COMPARE_MAX_0 0x100L
+#define HOST_TIMER_COMPARE_MAX_1 0x10000L
+#define HOST_TIMER_COMPARE_MAX_2 0x100L
+#define HOST_TIMER_CTC_0 __avr_tccr_of_output(0,A) |= _BV(__avr_wgm_of_output(0,1))
+#define HOST_TIMER_CTC_1 __avr_tccr_of_output(1,B) |= _BV(__avr_wgm_of_output(1,2))
+#define HOST_TIMER_CTC_2 __avr_tccr_of_output(2,A) |= _BV(__avr_wgm_of_output(2,1))
+#define ___avr_toie_of_timer(timer) TOIE ## timer
+#define __avr_toie_of_timer(timer) ___avr_toie_of_timer(timer)
+#define ___avr_ocie_of_timer(timer,channel) OCIE ## timer ## channel
+#define __avr_ocie_of_timer(timer,channel) ___avr_ocie_of_timer(timer,channel)
+#define __avr_ocie_of_timer_helperA(timer) __avr_ocie_of_timer(timer,A)
+#define __avr_ocie_of_timer_helperB(timer) __avr_ocie_of_timer(timer,B)
 #define host_timer_set_compare(timer,channel,value) __avr_ocr_of_output(timer,channel) = value
-#define host_timer_enable_interrupt(timer,which) \
-  __avr_timsk_of_output(timer) |= \
-  (which == HOST_TIMER_INTERRUPT_OVERFLOW ? _BV(__avr_toie_of_timer(timer)) : \
-  (which == HOST_TIMER_INTERRUPT_COMPARE_A ? _BV(__avr_ocie_of_timer(timer, A)) : \
-  _BV(__avr_ocie_of_timer(timer, B))))
-#define host_timer_disable_interrupt(timer,which) \
-  __avr_timsk_of_output(timer) &= \
-  (which == HOST_TIMER_INTERRUPT_OVERFLOW ? ~_BV(__avr_toie_of_timer(timer)) : \
-  (which == HOST_TIMER_INTERRUPT_COMPARE_A ? ~_BV(__avr_ocie_of_timer(timer, A)) : \
-  ~_BV(__avr_ocie_of_timer(timer, B))))
+#define ___avr_ie_of_timer(timer,which) which ## _ ## timer
+#define __avr_ie_of_timer(timer,which) ___avr_ie_of_timer(timer,which)
+#define ___avr_if_of_timer(which) which ## _flag
+#define __avr_if_of_timer(which) ___avr_if_of_timer(which)
+#define _host_timer_enable_interrupt(timer,which) __avr_timsk_of_output(timer) |= _BV(which(timer))
+#define host_timer_enable_interrupt(timer,which) _host_timer_enable_interrupt(timer,__avr_if_of_timer(which))
+#define _host_timer_disable_interrupt(timer,which) __avr_timsk_of_output(timer) &= ~_BV(which(timer))
+#define host_timer_disable_interrupt(timer,which) _host_timer_disable_interrupt(timer,__avr_if_of_timer(which))
+#define ___avr_timer_vector_name(timer,which) TIMER ## timer ## _ ## which ## _vect
+#define __avr_timer_vector_name(timer,which) ___avr_timer_vector_name(timer,which)
+#define ___avr_timer_vector_type(which) which ## _vector
+#define __avr_timer_vector_type(which) ___avr_timer_vector_type(which)
+#define host_timer_vector_name(timer,which) __avr_timer_vector_name(timer,__avr_timer_vector_type(which))
+#define host_timer_set_prescaler(timer,prescaler) \
+  __avr_tccr_of_output(timer,B) = (__avr_tccr_of_output(timer,B) & \
+      ~(_BV(__avr_cs_of_output(timer,2)) | _BV(__avr_cs_of_output(timer,1)) | \
+      _BV(__avr_cs_of_output(timer,0)))) | prescaler
+#define _host_prescaler_of_divisor(timer,divisor) HOST_TIMER_PRESCALER_ ## timer ## _ ## divisor
+#define host_prescaler_of_divisor(timer,divisor) _host_prescaler_of_divisor(timer,divisor)
+#define ___avr_tcnt_of_timer(timer) TCNT ## timer
+#define __avr_tcnt_of_timer(timer) ___avr_tcnt_of_timer(timer)
+#define host_timer_set_count(timer,count) __avr_tcnt_of_timer(timer) = count
+#define _host_timer_enable_ctc(timer) HOST_TIMER_CTC_ ## timer
+#define host_timer_enable_ctc(timer) _host_timer_enable_ctc(timer)
+/* Sets up given timer for CTC mode for a period of cycles cycles. Actual
+ * achievable cycles is returned in actual_cycles. */
+#define host_timer_set_reload(timer,cycles,actual_cycles) {\
+  uint8_t i; \
+  THostTimerPrescaler prescalers[] = host_prescalers_of_timer(timer); \
+  uint16_t ceiling = 0; \
+  for(i = 0; i < host_prescaler_count_of_timer(timer); i++) {\
+    if((cycles) < host_compare_max_of_timer(timer) * prescalers[i].divisor) {\
+      ceiling = (cycles) / prescalers[i].divisor; \
+      host_timer_set_compare(timer,HOST_TIMER_CHANNEL_A,ceiling); \
+      actual_cycles = ceiling * prescalers[i].divisor; \
+      host_timer_enable_ctc(timer); \
+      host_timer_set_prescaler(timer,prescalers[i].flags); \
+      break; \
+    }\
+  }\
+  if(!ceiling) {\
+    host_timer_set_compare(timer,HOST_TIMER_CHANNEL_A,host_compare_max_of_timer(timer) - 1); \
+    actual_cycles = (host_compare_max_of_timer(timer) - 1) * prescalers[i].divisor; \
+    host_timer_enable_ctc(timer); \
+    host_timer_set_prescaler(timer,prescalers[i].flags); \
+  }}
 
+/* Host waveform generator interface */
 /* Starts generating the given waveform at the given frequency on the given
- * output. Output is a host-specific identifier. */
+ * output. */
 //TODO: Investigate whether instrumenting OCRxB functionality is worth it
-//TODO: Add prescaler calculation
 #define host_functiongenerator_start(output,frequency,form) {\
-  _avr_ocr_of_output(output) = F_CPU / ((uint32_t)(frequency) << 4); \
+  uint32_t ac; \
+  host_timer_set_reload(_avr_timer_of_output(output),F_CPU / (frequency * 2),ac); \
   _avr_tccr_of_output(output, A) = _BV(_avr_com_of_output(output, 0)) | _BV(_avr_wgm_of_output(output, 1)); \
-  _avr_tccr_of_output(output, B) = _BV(_avr_cs_of_output(output, 1)); \
   _avr_timsk_of_output(output) = 0; \
   }
 /* Stops signal generation (and frees resources, if any used) */
 #define host_functiongenerator_stop(output) {\
   _avr_tccr_of_output(output, A) = 0x00; \
-  _avr_tccr_of_output(output, B) = 0x00; \
+  host_timer_set_prescaler(_avr_timer_of_output(output),host_prescaler_of_divisor(_avr_timer_of_output(output),0)); \
   }
 
 

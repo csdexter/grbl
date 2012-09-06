@@ -38,26 +38,22 @@ typedef union {
 } stepper_output_t;
 
 // Initialize and setup the stepper motor subsystem
-void st_init();
+void st_init(void);
 
 // Immediately disables steppers
-void st_go_idle();
+void st_go_idle(void);
 
 // Reset the stepper subsystem variables
-void st_reset();
+void st_reset(void);
 
 // Notify the stepper subsystem to start executing the g-code program in buffer.
-void st_cycle_start();
+void st_cycle_start(void);
 
 // Reinitializes the buffer after a feed hold for a resume.
-void st_cycle_reinitialize(); 
+void st_cycle_reinitialize(void);
 
 // Initiates a feed hold of the running program
-void st_feed_hold();
-
-// Time between step events used in the simulator.
-// Accessor function to keep st struct static
-double get_step_time();
+void st_feed_hold(void);
 
 
 #endif

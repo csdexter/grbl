@@ -85,5 +85,13 @@ typedef enum {
         (destination(argument) |= host_bitvalue(host_bit_of_output(argument))) : \
         (destination(argument) &= ~host_bitvalue(host_bit_of_output(argument)))))
 
+/* Host Timer interface */
+#define _host_prescaler_count_of_timer(timer) HOST_TIMER_PRESCALER_COUNT_ ## timer
+#define host_prescaler_count_of_timer(timer) _host_prescaler_count_of_timer(timer)
+#define _host_prescalers_of_timer(timer) HOST_TIMER_PRESCALERS_ ## timer
+#define host_prescalers_of_timer(timer) _host_prescalers_of_timer(timer)
+#define _host_compare_max_of_timer(timer) HOST_TIMER_COMPARE_MAX_ ## timer
+#define host_compare_max_of_timer(timer) _host_compare_max_of_timer(timer)
+
 
 #endif /* HOST_H_ */

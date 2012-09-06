@@ -22,7 +22,7 @@
 #include "host.h"
 
 
-void host_delay_ms(uint16_t ms) { while (ms--) _delay_ms(1); }
+void host_delay_ms(uint16_t ms) { while(ms--) _delay_ms(1); }
 void host_delay_us(uint16_t us) {
 /* Code taken from wiring.c of Arduino RTL */
 #if F_CPU == 20000000L

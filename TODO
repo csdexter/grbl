@@ -7,7 +7,6 @@
 * switch to better math (faster and smaller): use homebrewed routines for sin/cos/tan/hypot etc.
 * use #defines for the math magic to seamlessly switch between floating point and fixed point on AVR and between VFP and NEON on ARM
 * audit globals and structs, there's just too many of them to be right
-* prepare for porting to ARM: decouple hardware-specific parts from generic code, move everything behind #ifdefs, make it compile seamlessly for both AVR and ARM
 --
 * maybe get off Timer2 (just delay after setting the STEP lines), thus enabling SPINDLE_PWM coexistence
 * maybe add SPINDLE_RPM stuff (PWM) (mutually exclusive with charge pump on AVR, always on on ARM)

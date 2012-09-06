@@ -62,52 +62,11 @@ static volatile uint8_t busy;        // True when OCIE1A is being serviced. Used
  * The slope of acceleration is always +/- block->rate_delta and is applied at
  * a constant rate following the midpoint rule by the trapezoid generator, which
  * is called ACCELERATION_TICKS_PER_SECOND times per second. */
-
-// Configures the prescaler and ceiling of timer 1 to produce the given rate as
-// accurately as possible. Returns the actual number of cycles per interrupt
-static uint32_t config_step_timer(uint32_t cycles) {
-  uint16_t ceiling;
-  uint16_t prescaler;
-  uint32_t actual_cycles;
-
-  if(cycles <= 0xFFFFL) {
-    ceiling = cycles;
-    prescaler = bit(CS10); // prescaler: 1
-    actual_cycles = ceiling;
-  } else if(cycles <= 0x7FFFFL) {
-    ceiling = cycles >> 3;
-    prescaler = bit(CS11); // prescaler: 1/8
-    actual_cycles = ceiling * 8L;
-  } else if(cycles <= 0x3FFFFFL) {
-    ceiling =  cycles >> 6;
-    prescaler = bit(CS10) | bit(CS11); // prescaler: 1/64
-    actual_cycles = ceiling * 64L;
-  } else if(cycles <= 0xFFFFFFL) {
-    ceiling =  (cycles >> 8);
-    prescaler = bit(CS12); // prescaler: 1/256
-    actual_cycles = ceiling * 256L;
-  } else if(cycles <= 0x3FFFFFFL) {
-    ceiling = (cycles >> 10);
-    prescaler = bit(CS12) | bit(CS10); // prescaler: 1/1024
-    actual_cycles = ceiling * 1024L;
-  } else {
-    // Okay, that was slower than we actually go. Just set the slowest speed
-    ceiling = 0xFFFF;
-    prescaler = bit(CS12) | bit(CS10);
-    actual_cycles = 0xFFFFL * 1024;
-  }
-
-  // Set prescaler
-  TCCR1B = (TCCR1B & ~(bit(CS21) | bit(CS11) | bit(CS10))) | prescaler;
-  // Set ceiling
-  host_timer_set_compare(1, HOST_TIMER_CHANNEL_A, ceiling);
-
-  return actual_cycles;
-}
-
 static void set_step_events_per_minute(uint32_t steps_per_minute) {
-  if(steps_per_minute < MINIMUM_STEPS_PER_MINUTE) steps_per_minute = MINIMUM_STEPS_PER_MINUTE;
-  st.cycles_per_step_event = config_step_timer((F_CPU * 60) / steps_per_minute);
+  host_timer_set_reload(1,
+      (F_CPU * 60) / (steps_per_minute < MINIMUM_STEPS_PER_MINUTE ?
+          MINIMUM_STEPS_PER_MINUTE : steps_per_minute),
+      st.cycles_per_step_event);
 }
 
 // Stepper state initialization
@@ -162,13 +121,13 @@ inline static uint8_t iterate_trapezoid_cycle_counter(void) {
 }          
 
 /* "The Stepper Driver Interrupt" - This timer interrupt is the workhorse of
- * Grbl. It is executed at the rate set with config_step_timer. It pops blocks
- * from the block_buffer and executes them by pulsing the stepper pins
+ * Grbl. It is executed at the rate set with set_step_events_per_minute. It pops
+ * blocks from the block_buffer and executes them by pulsing the stepper pins
  * appropriately. It is supported by The Stepper Port Reset Interrupt which it
  * uses to reset the stepper port after each pulse. The Bresenham line tracer
  * algorithm controls all three stepper outputs simultaneously with these two
  *  interrupts. */
-ISR(TIMER1_COMPA_vect) {
+HOST_INTERRUPT(host_timer_vector_name(1, HOST_TIMER_INTERRUPT_COMPARE_A)) {
   if(busy) return; // The busy-flag is used to avoid reentering this interrupt
 
   // Set the direction pins a couple of nanoseconds before we step the steppers
@@ -183,10 +142,11 @@ ISR(TIMER1_COMPA_vect) {
     host_gpio_write(STEP_Y, out_bits.flags.step_y, HOST_GPIO_MODE_BIT);
     host_gpio_write(STEP_Z, out_bits.flags.step_z, HOST_GPIO_MODE_BIT);
   #endif
-  // Enable step pulse reset timer so that The Stepper Port Reset Interrupt can reset the signal after
-  // exactly settings.pulse_microseconds microseconds, independent of the main Timer1 prescaler.
-  TCNT2 = step_pulse_time; // Reload timer counter
-  TCCR2B = bit(CS21); // Start Timer2, 1/8 prescaler
+  // Enable step pulse reset timer so that The Stepper Port Reset Interrupt can
+  // reset the signal after exactly settings.pulse_microseconds microseconds,
+  // independent of the operation of Timer 1.
+  host_timer_set_count(2, step_pulse_time);
+  host_timer_set_prescaler(2, host_prescaler_of_divisor(2, 8));
 
   busy = true;
   // Re-enable interrupts to allow ISR_TIMER2_OVERFLOW to trigger on-time and allow serial communications
@@ -348,12 +308,12 @@ ISR(TIMER1_COMPA_vect) {
 // TODO: It is possible for the serial interrupts to delay this interrupt by a
 // few microseconds, if they execute right before this interrupt. Not a big
 // deal, but could use some TLC at some point.
-ISR(TIMER2_OVF_vect) {
+HOST_INTERRUPT(host_timer_vector_name(2, HOST_TIMER_INTERRUPT_OVERFLOW)) {
   // Reset stepping pins (leave the direction pins)
   host_gpio_write(STEP_X, settings.invert.flags.step_x, HOST_GPIO_MODE_BIT);
   host_gpio_write(STEP_Y, settings.invert.flags.step_y, HOST_GPIO_MODE_BIT);
   host_gpio_write(STEP_Z, settings.invert.flags.step_z, HOST_GPIO_MODE_BIT);
-  TCCR2B = 0; // Disable Timer2 to prevent re-entering this interrupt when it's not needed. 
+  host_timer_set_prescaler(2, host_prescaler_of_divisor(2, 0)); // Disable Timer 2 to prevent re-entering this interrupt when it's not needed.
 }
 
 #if STEP_PULSE_DELAY > 0
@@ -363,8 +323,7 @@ ISR(TIMER2_OVF_vect) {
   // settings.pulse_microseconds, as in normal operation.
   // The new timing between direction, step pulse, and step complete events are
   // setup in the st_wake_up() routine.
-  ISR(TIMER2_COMPA_vect) 
-  { 
+  HOST_INTERRUPT(host_timer_vector_name(2, HOST_TIMER_INTERRUPT_COMPARE_A)) {
     host_gpio_write(STEP_X, step_bits.flags.step_x, HOST_GPIO_MODE_BIT);
     host_gpio_write(STEP_Y, step_bits.flags.step_y, HOST_GPIO_MODE_BIT);
     host_gpio_write(STEP_Z, step_bits.flags.step_z, HOST_GPIO_MODE_BIT);
@@ -394,13 +353,12 @@ void st_init(void) {
   host_gpio_write(DIR_Y, settings.invert.flags.dir_y, HOST_GPIO_MODE_BIT);
   host_gpio_write(DIR_Z, settings.invert.flags.dir_z, HOST_GPIO_MODE_BIT);
 
-  TCCR1A = 0; // Prescaler is set later, when timer is started
-  // waveform generation = 0100 = CTC
-  TCCR1B = bit(WGM12);
+  // Configure Timer 1
+  host_timer_set_prescaler(1, host_prescaler_of_divisor(1, 0)); // Prescaler is set later, when timer is started
+  host_timer_enable_ctc(1);
 
   // Configure Timer 2
-  TCCR2A = 0; // Normal operation
-  TCCR2B = 0; // Disable timer until needed.
+  host_timer_set_prescaler(2, host_prescaler_of_divisor(2, 0)); // Disable timer until needed.
   host_timer_enable_interrupt(2, HOST_TIMER_INTERRUPT_OVERFLOW);
   #if STEP_PULSE_DELAY > 0
     host_timer_enable_interrupt(2, HOST_TIMER_INTERRUPT_COMPARE_A);
@@ -446,12 +404,4 @@ void st_cycle_reinitialize(void) {
     st.step_events_completed = 0;
   }
   sys.feed_hold = false; // Release feed hold. Cycle is ready to re-start.
-}
-
-// This is a mere accessor function to keep the st struct static
-// It returns the current stepper step time for the simulator.
-// That's why it returns a true double value
-//TODO: get rid of this blasphemy!
-double get_step_time(void) {
-  return (double)st.cycles_per_step_event / F_CPU;
 }
