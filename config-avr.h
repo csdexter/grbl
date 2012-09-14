@@ -44,8 +44,8 @@
 // Please see below for topology support (i.e. where are the switches installed
 // on your machine) and hard/soft limits
 #define LIMIT_X HOST_GPIO_PD2
-#define LIMIT_Y HOST_GPIO_PD2
-#define LIMIT_Z HOST_GPIO_PD2
+#define LIMIT_Y HOST_GPIO_PD3
+#define LIMIT_Z HOST_GPIO_PD4
 
 // Uncomment the next line to enable support for a Stepper Disable control
 // line, for drivers that have/use one (this is always true logic, level [i.e.
