@@ -22,8 +22,9 @@
 # OBJECTS ...... The object files created from your source files. This list is
 #                usually the same as the list of source files with suffix ".o".
 
-OBJECTS    = main.o motion_control.o gcode.o spindle_control.o serial.o protocol.o stepper.o \
-             eeprom.o settings.o planner.o nuts_bolts.o limits.o print.o cpump.o host/host.o
+OBJECTS    = main.o motion_control.o gcode.o spindle_control.o protocol.o \
+             stepper.o settings.o planner.o nuts_bolts.o limits.o cpump.o \
+             runtime.o host/host-i386.o host/host.o
 COMPILE = gcc -Wall -g -Os -I. -ffunction-sections -fdata-sections -funsigned-bitfields
 OBJDUMP = objdump
 
