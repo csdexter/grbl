@@ -28,6 +28,7 @@
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
+#include <avr/version.h>
 #include <util/crc16.h>
 
 
@@ -48,9 +49,15 @@ void host_delay_us(uint16_t us);
 #define host_fetch_S(s) pgm_read_byte(s)
 
 /* Host-specific NVS methods */
-#define host_nvs_store_byte(a, v) eeprom_update_byte(a, v)
-#define host_nvs_store_word(a, v) eeprom_update_word(a, v)
-#define host_nvs_store_data(a, v, s) eeprom_update_block(v, a, s)
+#if __AVR_LIBC_VERSION__ >= 10607UL
+# define host_nvs_store_byte(a, v) eeprom_update_byte(a, v)
+# define host_nvs_store_word(a, v) eeprom_update_word(a, v)
+# define host_nvs_store_data(a, v, s) eeprom_update_block(v, a, s)
+#else
+# define host_nvs_store_byte(a, v) eeprom_write_byte(a, v)
+# define host_nvs_store_word(a, v) eeprom_write_word(a, v)
+# define host_nvs_store_data(a, v, s) eeprom_update_block(v, a, s)
+#endif
 #define host_nvs_fetch_byte(a) eeprom_read_byte(a)
 #define host_nvs_fetch_word(a) eeprom_read_word(a)
 #define host_nvs_fetch_data(a, t, s) eeprom_read_block(t, a, s)
