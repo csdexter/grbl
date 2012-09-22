@@ -26,6 +26,7 @@
 
 #include "config.h"
 
+#include "coolant_control.h"
 #include "cpump.h"
 #include "gcode.h"
 #include "limits.h"
@@ -81,6 +82,7 @@ int main(void) {
         cpump_init(); // Fire up Charge Pump to wake up servo controller as following calls may try to move things
       #endif
       spindle_init();
+      coolant_init();
       limits_init();
       st_reset(); // Clear stepper subsystem variables.
 

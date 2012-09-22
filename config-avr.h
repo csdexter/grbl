@@ -22,9 +22,9 @@
 // see settings.c for how to invert them if your hardware setup requires it as
 // well as how to control the minimum pulse width to match what your controller
 // can take)
-#define STEP_X HOST_GPIO_PC0
-#define STEP_Y HOST_GPIO_PC1
-#define STEP_Z HOST_GPIO_PC2
+#define STEP_X HOST_GPIO_PC0 // Uno Analog Pin 0
+#define STEP_Y HOST_GPIO_PC1 // Uno Analog Pin 1
+#define STEP_Z HOST_GPIO_PC2 // Uno Analog Pin 2
 
 // Define pin-assignments for stepper direction (by default they are taken to be
 // true logic, level [i.e. 0 causes the axis to move away from zero and 1 causes
@@ -33,19 +33,19 @@
 // STEP_PULSE_DELAY in config.h for matching your controller's time constraints)
 //TODO: move the whole invert stuff out of the core and into the actual
 //      host_gpio_write() call to keep hardware specifics out of the core logic
-#define DIR_X HOST_GPIO_PC3
-#define DIR_Y HOST_GPIO_PC4
-#define DIR_Z HOST_GPIO_PC5
+#define DIR_X HOST_GPIO_PC3 // Uno Analog Pin 3
+#define DIR_Y HOST_GPIO_PC4 // Uno Analog Pin 4
+#define DIR_Z HOST_GPIO_PC5 // Uno Analog Pin 5
 
 // Define pin-assignments for limit switches (by default they are taken to be
 // active-low, level [i.e. they transition from 1 to 0 when the machine hits the
 // limit and stay 0 while the machine is in the limit area]; see settings.c for
 // how to invert them if your hardware setup requires it)
-// Please see below for topology support (i.e. where are the switches installed
-// on your machine) and hard/soft limits
-#define LIMIT_X HOST_GPIO_PD2
-#define LIMIT_Y HOST_GPIO_PD3
-#define LIMIT_Z HOST_GPIO_PD4
+// Please see the main (hardware-agnostic) config.h for topology support (i.e.
+// where are the switches installed on your machine) and hard/soft limits
+#define LIMIT_X HOST_GPIO_PD2 // Uno Digital Pin 2
+#define LIMIT_Y HOST_GPIO_PD3 // Uno Digital Pin 3
+#define LIMIT_Z HOST_GPIO_PD4 // Uno Digital Pin 4
 
 // Uncomment the next line to enable support for a Stepper Disable control
 // line, for drivers that have/use one (this is always true logic, level [i.e.
@@ -57,7 +57,7 @@
 // state of the driver chips which means the motors will advance to the next
 // full step the next time they're enabled (i.e. microstepping state is lost)
 // -- you may not want to use it if that is the case.
-//#define STEPPERS_DISABLE HOST_GPIO_PB0
+//#define STEPPERS_DISABLE HOST_GPIO_PB0 // Uno Digital Pin 8
 
 // Define pin-assignments for spindle control (this is always active-high, level
 // [i.e. 1 causes the spindle to start and run until 0 is output])
@@ -77,6 +77,12 @@
 // NOTE: the rest of grbl uses Timers 1 and 2 so the only other option is
 // OC0B on PD5 (Arduino Digital 5).
 #define CHARGE_PUMP HOST_GPIO_PD6 // Uno Digital Pin 6
+
+// Uncomment one or both next lines to enable support for coolant control (these
+// are always active-high, level [i.e. 1 causes the respective coolant type to
+// start and run until 0 is output])
+//#define CFLOOD_ENABLE HOST_GPIO_PB1 // Uno Digital Pin 9
+//#define CSPRAY_ENABLE HOST_GPIO_PB2 // Uno Digital Pin 10
 
 
 #endif /* CONFIG_AVR_H */

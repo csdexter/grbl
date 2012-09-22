@@ -23,6 +23,8 @@
 
 #include "config.h"
 
+#include "spindle_control.h"
+
 #include "planner.h"
 
 
@@ -36,7 +38,7 @@ void spindle_stop(void) {
 }
 
 void spindle_init(void) {
-  current_direction = 0;
+  current_direction = SPINDLE_STOP;
   host_gpio_direction(SPINDLE_ENABLE, HOST_GPIO_DIRECTION_OUTPUT, HOST_GPIO_MODE_BIT);
   #ifdef SPINDLE_DIRECTION
     host_gpio_direction(SPINDLE_DIRECTION, HOST_GPIO_DIRECTION_OUTPUT, HOST_GPIO_MODE_BIT);
@@ -44,22 +46,19 @@ void spindle_init(void) {
   spindle_stop();
 }
 
-void spindle_run(int direction, uint32_t rpm) 
-{
+void spindle_run(int8_t direction) {
   /* If we need to change state, we must wait for all moves to complete before
    * doing so. */
-  if (direction != current_direction) {
+  if(direction != current_direction) {
     plan_synchronize();
-    if (direction) {
+    if(direction != SPINDLE_STOP) {
       #ifdef SPINDLE_DIRECTION
-        if(direction > 0)
+        if(direction == SPINDLE_CW)
           host_gpio_write(SPINDLE_DIRECTION, false, HOST_GPIO_MODE_BIT);
         else host_gpio_write(SPINDLE_DIRECTION, true, HOST_GPIO_MODE_BIT);
       #endif
       host_gpio_write(SPINDLE_ENABLE, true, HOST_GPIO_MODE_BIT);
-    } else {
-      spindle_stop();
-    }
+    } else spindle_stop();
     current_direction = direction;
   }
 }

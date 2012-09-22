@@ -1,8 +1,8 @@
 /*
-  spindle_control.h - spindle control methods
+  coolant_control.h - coolant control methods
   Part of Grbl
 
-  Copyright (c) 2009-2011 Simen Svale Skogsrud
+  Copyright (c) 2012 Sungeun K. Jeon
 
   Grbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -11,24 +11,24 @@
 
   Grbl is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
+  along with Grbl. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef spindle_control_h
-#define spindle_control_h 
+#ifndef coolant_control_h
+#define coolant_control_h
 
 #include <stdint.h>
 
-#define SPINDLE_CW 1
-#define SPINDLE_CCW -1
-#define SPINDLE_STOP 0
+#define COOLANT_MIST 0x02
+#define COOLANT_FLOOD 0x01
+#define COOLANT_OFF 0x00
 
-void spindle_init();
-void spindle_run(int8_t direction);
-void spindle_stop();
+void coolant_init(void);
+void coolant_stop(void);
+void coolant_run(uint8_t mode);
 
 #endif
