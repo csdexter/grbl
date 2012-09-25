@@ -29,7 +29,7 @@
 #  include "config-avr.h"
 # elif defined(__arm__)
 #  include "config-arm.h"
-# elif defined(__i386__)
+# elif defined(__i386__) || defined(__x86_64__)
 #  include "config-i386.h"
 # endif
 #endif

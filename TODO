@@ -1,3 +1,4 @@
+* do away with hosting <==> i386 lameness, one or the other, not both!
 * spindle_control.c and coolant_control.c are identical, sacrifice readability for code size: genericize and merge
 * un-lame limits.c (inject blocks instead of stepping by hand [with acceleration]) OR see below
 * extend stepper.c with hard limits support, this automatically makes limits.c sane (i.e. we can just ask for a X_travel + homing_threshold G00 in the right direction and tell the code we expect the endstop to trip -- instead of doing physics voodoo by injecting blocks and checking the endstop switch from limits.c)
@@ -15,6 +16,7 @@
 * maybe add E_STOP stuff (freeze -- needs to be connected to EXEC_RESET)
 * maybe remember that this is a plotter, not a pixel display, and do way better arcs
 * if we get the one above right, maybe implement Bezier and NURBs :-)
+* maybe implement exotic limits (midpoint switches, two-switch limits and configurable homing sequence)
 --
 * more G-code stuff from the canonical G-Code interpreter project
 --

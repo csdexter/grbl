@@ -30,10 +30,9 @@
 DEVICE     = atmega328p
 CLOCK      = 16000000
 PROGRAMMER = -c arduino -P /dev/ttyACM0 -b 115200
-#TODO: sort this alphabetically
-OBJECTS    = main.o motion_control.o gcode.o spindle_control.o protocol.o \
-             stepper.o settings.o planner.o nuts_bolts.o limits.o cpump.o \
-             runtime.o host/host-avr.o host/host.o coolant_control.o
+OBJECTS    = coolant_control.o cpump.o gcode.o host/host.o host/host-avr.o \
+             limits.o main.o motion_control.o nuts_bolts.o planner.o \
+             protocol.o runtime.o settings.o spindle_control.o stepper.o
 # FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
 FUSES      = -U hfuse:w:0xd2:m -U lfuse:w:0xff:m
 # update that line with this when programmer is back up: 

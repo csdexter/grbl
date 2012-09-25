@@ -10,13 +10,14 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #if defined(__GNUC__)
 # if defined(__AVR__)
 #  include "host/host-avr.h"
 # elif defined(__arm__)
 #  include "host/host-arm.h"
-# elif defined(__i386__)
+# elif defined(__i386__) || defined(__x86_64__)
 #  include "host/host-i386.h"
 # endif
 #endif

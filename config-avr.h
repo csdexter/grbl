@@ -12,10 +12,10 @@
 #ifndef CONFIG_H
 # error This file must not be included directly, use config.h instead!
 #endif
-#ifdef CONFIG_AVR_H
+#ifdef CONFIG_HAL_H
 # error The configuration header of another HAL has already been included!
 #else
-#define CONFIG_AVR_H
+#define CONFIG_HAL_H
 
 // Define pin-assignments for stepper movement (by default they are taken to be
 // active-high, edge [i.e. the motors will move one step on the rising edge];
@@ -85,4 +85,4 @@
 //#define CSPRAY_ENABLE HOST_GPIO_PB2 // Uno Digital Pin 10
 
 
-#endif /* CONFIG_AVR_H */
+#endif /* CONFIG_HAL_H */

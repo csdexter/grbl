@@ -32,6 +32,9 @@
 #include <util/crc16.h>
 
 
+/* Host-specific opaque initialization */
+#define host_init() // NOP on AVR
+
 /* Host-specific interrupt enable */
 #define host_sei() sei()
 /* Host-specific interrupt vector declaration */
@@ -56,7 +59,7 @@ void host_delay_us(uint16_t us);
 #else
 # define host_nvs_store_byte(a, v) eeprom_write_byte(a, v)
 # define host_nvs_store_word(a, v) eeprom_write_word(a, v)
-# define host_nvs_store_data(a, v, s) eeprom_update_block(v, a, s)
+# define host_nvs_store_data(a, v, s) eeprom_write_block(v, a, s)
 #endif
 #define host_nvs_fetch_byte(a) eeprom_read_byte(a)
 #define host_nvs_fetch_word(a) eeprom_read_word(a)
