@@ -39,6 +39,9 @@
 #define host_sei() sei()
 /* Host-specific interrupt vector declaration */
 #define HOST_INTERRUPT(x) ISR(x)
+/* Host-specific interrupt vector registration */
+#define HOST_INTERRUPT_FAMILY_TIMER 0x00 // Dummy on AVR
+#define host_register_interrupt(x) // NOP on AVR
 
 /* Host-specific delays */
 void host_delay_ms(uint16_t ms);
@@ -245,6 +248,8 @@ typedef struct {
     uint16_t divisor;
     uint8_t flags;
 } THostTimerPrescaler;
+/* Frequency at which the timers count if prescalers are set to unity */
+#define HOST_TIMER_FOSC F_CPU
 #define HOST_TIMER_CHANNEL_A A
 #define HOST_TIMER_CHANNEL_B B
 #define HOST_TIMER_INTERRUPT_OVERFLOW_flag __avr_toie_of_timer

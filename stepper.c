@@ -64,7 +64,7 @@ static volatile uint8_t busy;        // True when OCIE1A is being serviced. Used
  * is called ACCELERATION_TICKS_PER_SECOND times per second. */
 static void set_step_events_per_minute(uint32_t steps_per_minute) {
   host_timer_set_reload(1,
-      (F_CPU * 60) / (steps_per_minute < MINIMUM_STEPS_PER_MINUTE ?
+      (HOST_TIMER_FOSC * 60) / (steps_per_minute < MINIMUM_STEPS_PER_MINUTE ?
           MINIMUM_STEPS_PER_MINUTE : steps_per_minute),
       st.cycles_per_step_event);
 }
@@ -363,9 +363,14 @@ void st_init(void) {
   #if STEP_PULSE_DELAY > 0
     host_timer_enable_interrupt(2, HOST_TIMER_INTERRUPT_COMPARE_A);
   #endif
-
+  host_register_interrupt(host_timer_vector_name(1, HOST_TIMER_INTERRUPT_COMPARE_A));
+  host_register_interrupt(host_timer_vector_name(2, HOST_TIMER_INTERRUPT_OVERFLOW));
+  #if STEP_PULSE_DELAY > 0
+    host_register_interrupt(host_timer_vector_name(2, HOST_TIMER_INTERRUPT_COMPARE_A));
+  #endif
   // Start in the idle state
   st_go_idle();
+
 }
 
 // Planner external interface to start stepper interrupt and execute the blocks

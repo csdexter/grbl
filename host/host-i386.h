@@ -38,10 +38,6 @@
 /* #include dummy */
 
 
-#ifndef F_CPU
-# define F_CPU 16000000UL
-#endif
-
 /* Host-specific opaque initialization */
 void host_init(void); // Set environment up when hosting
 
@@ -50,6 +46,11 @@ void host_sei(void);
 /* Host-specific interrupt vector declaration */
 #define HOST_INTERRUPT(x) void x(void);\
   void x(void)
+/* Host-specific interrupt vector registration */
+#define HOST_INTERRUPT_FAMILY_TIMER 0x01
+#define _i386_stringify(x) #x
+void i386_register_interrupt(const char *name, void(*isr)(void));
+#define host_register_interrupt(vector) i386_register_interrupt(_i386_stringify(vector), vector)
 
 /* Host-specific delays */
 void i386_delay_us(uint32_t us);
@@ -118,10 +119,29 @@ void host_gpio_write(uint8_t output, uint8_t value, bool mode);
 void host_gpio_toggle(uint8_t output, bool mode);
 
 /* Host Timer interface */
+#define HOST_TIMER_FOSC 16000000UL
+#define HOST_TIMER_INTERRUPT_OVERFLOW_flag 0x01
+#define HOST_TIMER_INTERRUPT_OVERFLOW_vector O
+#define HOST_TIMER_INTERRUPT_COMPARE_A_flag 0x11
+#define HOST_TIMER_INTERRUPT_COMPARE_A_vector A
+#define HOST_TIMER_INTERRUPT_COMPARE_B_flag 0x12
+#define HOST_TIMER_INTERRUPT_COMPARE_B_vector B
+#define ___i386_timer_vector_name(timer,which) T ## timer ## _ ## which ## _V
+#define __i386_timer_vector_name(timer,which) ___i386_timer_vector_name(timer,which)
+#define ___i386_timer_vector_type(which) which ## _vector
+#define __i386_timer_vector_type(which) ___i386_timer_vector_type(which)
+#define host_timer_vector_name(timer,which) __i386_timer_vector_name(timer,__i386_timer_vector_type(which))
+void i386_timer_enable_interrupt(uint8_t timer, uint8_t which);
+void i386_timer_disable_interrupt(uint8_t timer, uint8_t which);
+#define ___i386_if_of_timer(which) which ## _flag
+#define __i386_if_of_timer(which) ___i386_if_of_timer(which)
+#define _host_timer_enable_interrupt(timer,which) i386_timer_enable_interrupt(timer, which)
+#define host_timer_enable_interrupt(timer,which) _host_timer_enable_interrupt(timer,__i386_if_of_timer(which))
+#define _host_timer_disable_interrupt(timer,which) i386_timer_disable_interrupt(timer, which)
+#define host_timer_disable_interrupt(timer,which) _host_timer_disable_interrupt(timer,__i386_if_of_timer(which))
 void host_timer_set_compare(uint8_t timer, uint8_t channel, uint32_t value);
-void host_timer_enable_interrupt(uint8_t timer, uint8_t which);
-void host_timer_disable_interrupt(uint8_t timer, uint8_t which);
-void host_timer_vector_name(uint8_t timer, uint8_t which);
+#define host_prescaler_of_divisor(timer,divisor) (divisor)
+void host_timer_set_count(uint8_t timer, uint32_t count);
 void host_timer_set_prescaler(uint8_t timer, uint8_t prescaler);
 void host_timer_enable_ctc(uint8_t timer);
 uint32_t i386_timer_set_reload(uint8_t timer, uint32_t cycles);

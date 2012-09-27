@@ -13,8 +13,8 @@
 #include "config.h"
 
 // Some useful constants
-#define TICKS_PER_MICROSECOND (F_CPU / 1000000)
-#define CYCLES_PER_ACCELERATION_TICK (F_CPU / ACCELERATION_TICKS_PER_SECOND)
+#define TICKS_PER_MICROSECOND (HOST_TIMER_FOSC / 1000000)
+#define CYCLES_PER_ACCELERATION_TICK (HOST_TIMER_FOSC / ACCELERATION_TICKS_PER_SECOND)
 
 // Stepper state variable. Contains running data and trapezoid variables.
 typedef struct {
