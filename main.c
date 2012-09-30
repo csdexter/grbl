@@ -43,7 +43,9 @@
 system_t sys; 
 
 
-int main(void) {
+int main(int argc, char **argv) {
+  // Initialize environment (if any)
+  host_init(argc, argv);
   // Initialize system
   host_serialconsole_init(); // Setup serial baud rate and interrupts
   st_init(); // Setup stepper pins and interrupt timers

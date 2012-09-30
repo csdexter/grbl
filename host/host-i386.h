@@ -39,7 +39,7 @@
 
 
 /* Host-specific opaque initialization */
-void host_init(void); // Set environment up when hosting
+void host_init(int argc, char **argv); // Set environment up when hosting
 
 /* Host-specific interrupt enable */
 void host_sei(void);
@@ -81,38 +81,27 @@ void host_serialconsole_init();
 void host_serialconsole_reset();
 /* Returns CONSOLE_NO_DATA if nothing to read */
 char host_serialconsole_read(void);
-/* Blocks until buffer space is available if block is set to true, returns
- * false if in non-blocking mode and no buffer space */
 bool host_serialconsole_write(char c, bool block);
-/* Host serial console unsigned integer output in base 10. Blocks until buffer
- * space is available if block is set to true, returns false if in non-blocking
- * mode and no buffer space */
 bool host_serialconsole_printinteger(uint32_t n, bool block);
-/* Host serial console byte output in base 2. Blocks until buffer space is
- * available if block is set to true, returns false if in non-blocking mode and
- * no buffer space */
 bool host_serialconsole_printbinary(uint8_t n, bool block);
-/* Host serial console float output with precision figures after the decimal
- * point. Blocks until buffer space is available if block is set to true,
- * returns false if in non-blocking mode and no buffer space */
 bool host_serialconsole_printfloat(float n, uint8_t precision, bool block);
 
 /* Host GPIO interface */
-#define HOST_GPIO_STEP_X 0x0000
-#define HOST_GPIO_STEP_Y 0x0001
-#define HOST_GPIO_STEP_Z 0x0002
-#define HOST_GPIO_DIR_X 0x0010
-#define HOST_GPIO_DIR_Y 0x0011
-#define HOST_GPIO_DIR_Z 0x0012
-#define HOST_GPIO_LIMIT_X 0x0020
-#define HOST_GPIO_LIMIT_Y 0x0021
-#define HOST_GPIO_LIMIT_Z 0x0022
-#define HOST_GPIO_SERVO_OFF 0x0030
-#define HOST_GPIO_SPINDLE_ON 0x0040
-#define HOST_GPIO_SPINDLE_CCW 0x0041
-#define HOST_GPIO_CHARGE_PUMP 0x0031
-#define HOST_GPIO_COOL_FLOOD 0x0050
-#define HOST_GPIO_COOL_MIST 0x0051
+#define HOST_GPIO_STEP_X 0x01
+#define HOST_GPIO_STEP_Y 0x02
+#define HOST_GPIO_STEP_Z 0x03
+#define HOST_GPIO_DIR_X 0x04
+#define HOST_GPIO_DIR_Y 0x05
+#define HOST_GPIO_DIR_Z 0x06
+#define HOST_GPIO_LIMIT_X 0x07
+#define HOST_GPIO_LIMIT_Y 0x08
+#define HOST_GPIO_LIMIT_Z 0x09
+#define HOST_GPIO_SERVO_OFF 0x0A
+#define HOST_GPIO_SPINDLE_ON 0x0B
+#define HOST_GPIO_SPINDLE_CCW 0x0C
+#define HOST_GPIO_CHARGE_PUMP 0x0D
+#define HOST_GPIO_COOL_FLOOD 0x0E
+#define HOST_GPIO_COOL_MIST 0x0F
 void host_gpio_direction(uint8_t output, bool direction, bool mode);
 uint8_t host_gpio_read(uint8_t output, bool mode);
 void host_gpio_write(uint8_t output, uint8_t value, bool mode);
@@ -120,12 +109,23 @@ void host_gpio_toggle(uint8_t output, bool mode);
 
 /* Host Timer interface */
 #define HOST_TIMER_FOSC 16000000UL
+#define HOST_TIMER_CHANNEL_A 0x02
+#define HOST_TIMER_CHANNEL_B 0x03
 #define HOST_TIMER_INTERRUPT_OVERFLOW_flag 0x01
 #define HOST_TIMER_INTERRUPT_OVERFLOW_vector O
-#define HOST_TIMER_INTERRUPT_COMPARE_A_flag 0x11
+#define HOST_TIMER_INTERRUPT_COMPARE_A_flag HOST_TIMER_CHANNEL_A
 #define HOST_TIMER_INTERRUPT_COMPARE_A_vector A
-#define HOST_TIMER_INTERRUPT_COMPARE_B_flag 0x12
+#define HOST_TIMER_INTERRUPT_COMPARE_B_flag HOST_TIMER_CHANNEL_B
 #define HOST_TIMER_INTERRUPT_COMPARE_B_vector B
+#define HOST_TIMER_PRESCALER_COUNT_0 5
+#define HOST_TIMER_PRESCALERS_0 {1, 8, 64, 256, 1024}
+#define HOST_TIMER_PRESCALER_COUNT_1 5
+#define HOST_TIMER_PRESCALERS_1 {1, 8, 64, 256, 1024}
+#define HOST_TIMER_PRESCALER_COUNT_2 7
+#define HOST_TIMER_PRESCALERS_2 {1, 8, 32, 64, 128, 256, 1024}
+#define HOST_TIMER_COMPARE_MAX_0 0x100UL
+#define HOST_TIMER_COMPARE_MAX_1 0x10000UL
+#define HOST_TIMER_COMPARE_MAX_2 0x100UL
 #define ___i386_timer_vector_name(timer,which) T ## timer ## _ ## which ## _V
 #define __i386_timer_vector_name(timer,which) ___i386_timer_vector_name(timer,which)
 #define ___i386_timer_vector_type(which) which ## _vector

@@ -33,7 +33,7 @@
 
 
 /* Host-specific opaque initialization */
-#define host_init() // NOP on AVR
+#define host_init(argc,argv) // NOP on AVR
 
 /* Host-specific interrupt enable */
 #define host_sei() sei()
@@ -301,9 +301,9 @@ typedef struct {
     {128, HOST_TIMER_PRESCALER_2_128},\
     {256, HOST_TIMER_PRESCALER_2_256},\
     {1024, HOST_TIMER_PRESCALER_2_1024}}
-#define HOST_TIMER_COMPARE_MAX_0 0x100L
-#define HOST_TIMER_COMPARE_MAX_1 0x10000L
-#define HOST_TIMER_COMPARE_MAX_2 0x100L
+#define HOST_TIMER_COMPARE_MAX_0 0x100UL
+#define HOST_TIMER_COMPARE_MAX_1 0x10000UL
+#define HOST_TIMER_COMPARE_MAX_2 0x100UL
 #define HOST_TIMER_CTC_0 __avr_tccr_of_output(0,A) |= _BV(__avr_wgm_of_output(0,1))
 #define HOST_TIMER_CTC_1 __avr_tccr_of_output(1,B) |= _BV(__avr_wgm_of_output(1,2))
 #define HOST_TIMER_CTC_2 __avr_tccr_of_output(2,A) |= _BV(__avr_wgm_of_output(2,1))
