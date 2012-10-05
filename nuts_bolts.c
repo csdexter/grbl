@@ -26,9 +26,19 @@
 
 
 bool read_float(char *line, uint8_t *char_counter, float *float_ptr) {
-  char *end;
+  char *end, saveChar = '\0';
+  uint8_t saveIndex = *char_counter;
+
+  if(line[saveIndex] == '+' || line[saveIndex] == '-') saveIndex++; // Skip over sign, if present
+  while(line[saveIndex] && ((line[saveIndex] >= '0' && line[saveIndex] <= '9') || line[saveIndex] == '.')) saveIndex++; // Find the end of the number
+  if(line[saveIndex]) { // Otherwise it's \0 anyway, no need to fixup
+    saveChar = line[saveIndex];
+    line[saveIndex] = '\0';
+  }
   
+  // strtod() will now see only the number and nothing beyond it
   *float_ptr = strtod(&line[*char_counter], &end);
+  if(saveChar) line[saveIndex] = saveChar; // Undo the fix, if needed
   if(end == &line[*char_counter]) return false;
   else {
     *char_counter = end - line;
