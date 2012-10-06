@@ -108,7 +108,7 @@ uint16_t host_crc16(uint16_t crc, uint8_t data) {
 
 static void _i386_init_nvs(const char *fileName) {
   printf("NVST: Using %s as NVS container\n", fileName);
-
+  //TODO: create if it didn't already exist
   nvs = fopen(fileName, "r+b");
 }
 
