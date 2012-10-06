@@ -60,6 +60,32 @@ static const TTimerPrescalerSpec timerProperties[] = {
   {timer2Prescalers, HOST_TIMER_PRESCALER_COUNT_2, HOST_TIMER_COMPARE_MAX_2},
 };
 
+static bool interruptsEnabled = false;
+
+typedef struct {
+  char name[7];
+  uint8_t peripheral, instance, event;
+  bool enabled;
+  void(*vector)(void);
+} TInterruptDescriptor;
+
+#define PERIPHERAL_TIMER 0x01
+#define EVENT_TIMER_OVERFLOW 0x01
+#define EVENT_TIMER_COMPARE_A 0x02
+#define EVENT_TIMER_COMPARE_B 0x03
+
+static TInterruptDescriptor interrupts[] = {
+  {"T0_A_V", PERIPHERAL_TIMER, 0, EVENT_TIMER_COMPARE_A, false, NULL},
+  {"T0_B_V", PERIPHERAL_TIMER, 0, EVENT_TIMER_COMPARE_B, false, NULL},
+  {"T0_O_V", PERIPHERAL_TIMER, 0, EVENT_TIMER_OVERFLOW, false, NULL},
+  {"T1_A_V", PERIPHERAL_TIMER, 1, EVENT_TIMER_COMPARE_A, false, NULL},
+  {"T1_B_V", PERIPHERAL_TIMER, 1, EVENT_TIMER_COMPARE_B, false, NULL},
+  {"T1_O_V", PERIPHERAL_TIMER, 1, EVENT_TIMER_OVERFLOW, false, NULL},
+  {"T2_A_V", PERIPHERAL_TIMER, 2, EVENT_TIMER_COMPARE_A, false, NULL},
+  {"T2_B_V", PERIPHERAL_TIMER, 2, EVENT_TIMER_COMPARE_B, false, NULL},
+  {"T2_O_V", PERIPHERAL_TIMER, 2, EVENT_TIMER_OVERFLOW, false, NULL}
+};
+
 void i386_delay_us(uint32_t us) {
   struct timespec before, after;
 
@@ -97,10 +123,29 @@ void host_init(int argc, char **argv) {
 
 void host_sei(void) {
   printf("INTR: Interrupts are now globally enabled\n");
+  interruptsEnabled = true;
+}
+
+static int _i386_compare_interrupts(const void *a, const void *b) {
+  return strcmp(((const TInterruptDescriptor *)a)->name, ((const TInterruptDescriptor *)b)->name);
+}
+
+static void _i386_do_interrupt_work(void) {
+  //TODO: Stub, add flesh ;-)
 }
 
 void i386_register_interrupt(const char *name, void(*isr)(void)) {
-  printf("INTR: Associated code at %p with vector %s\n", isr, name);
+  TInterruptDescriptor tmpint, *tmpintptr = NULL;
+
+  memset(&tmpint, 0x00, sizeof(tmpint));
+  strcpy(tmpint.name, name);
+  tmpintptr = bsearch(&tmpint, interrupts,
+      sizeof(interrupts) / sizeof(interrupts[0]), sizeof(TInterruptDescriptor),
+      _i386_compare_interrupts);
+  if(tmpintptr) {
+    tmpintptr->vector = isr;
+    printf("INTR: Associated code at %p with vector %s\n", isr, name);
+  }
 }
 
 void host_gpio_write(uint8_t output, uint8_t value, bool mode) {
@@ -160,6 +205,10 @@ void host_serialconsole_reset() {
 }
 
 char host_serialconsole_read(void) {
+  //This is an input-driven program, it therefore makes sense to trap the
+  //look-alike of the read() call and schedule interrupt work there
+  if(interruptsEnabled) _i386_do_interrupt_work();
+
   int c = fgetc(stdin);
 
   return (c == EOF ? CONSOLE_NO_DATA : c);
@@ -200,11 +249,49 @@ bool host_serialconsole_printfloat(float n, uint8_t precision, bool block) {
 }
 
 void i386_timer_enable_interrupt(uint8_t timer, uint8_t which) {
-  printf("INTR: Enabled interrupt for timer %"PRIu8" event %s\n", timer, timerInterruptNames[which]);
+  TInterruptDescriptor tmpint, *tmpintptr;
+
+  memset(&tmpint, 0x00, sizeof(tmpint));
+  tmpint.name[0] = 'T';
+  tmpint.name[1] = '0' + timer;
+  tmpint.name[2] = '_';
+  switch(which) {
+    case EVENT_TIMER_OVERFLOW: tmpint.name[3] = 'O'; break;
+    case EVENT_TIMER_COMPARE_A: tmpint.name[3] = 'A'; break;
+    case EVENT_TIMER_COMPARE_B: tmpint.name[3] = 'B'; break;
+  }
+  tmpint.name[4] = '_';
+  tmpint.name[5] = 'V'; // \0 already there from memset() above
+  tmpintptr = bsearch(&tmpint, interrupts,
+      sizeof(interrupts) / sizeof(interrupts[0]), sizeof(TInterruptDescriptor),
+      _i386_compare_interrupts);
+  if(tmpintptr) {
+    tmpintptr->enabled = true;
+    printf("INTR: Enabled interrupt for timer %"PRIu8" event %s\n", timer, timerInterruptNames[which]);
+  }
 }
 
 void i386_timer_disable_interrupt(uint8_t timer, uint8_t which) {
-  printf("INTR: Disabled interrupt for timer %"PRIu8" event %s\n", timer, timerInterruptNames[which]);;
+  TInterruptDescriptor tmpint, *tmpintptr;
+
+  memset(&tmpint, 0x00, sizeof(tmpint));
+  tmpint.name[0] = 'T';
+  tmpint.name[1] = '0' + timer;
+  tmpint.name[2] = '_';
+  switch(which) {
+    case EVENT_TIMER_OVERFLOW: tmpint.name[3] = 'O'; break;
+    case EVENT_TIMER_COMPARE_A: tmpint.name[3] = 'A'; break;
+    case EVENT_TIMER_COMPARE_B: tmpint.name[3] = 'B'; break;
+  }
+  tmpint.name[4] = '_';
+  tmpint.name[5] = 'V'; // \0 already there from memset() above
+  tmpintptr = bsearch(&tmpint, interrupts,
+      sizeof(interrupts) / sizeof(interrupts[0]), sizeof(TInterruptDescriptor),
+      _i386_compare_interrupts);
+  if(tmpintptr) {
+    tmpintptr->enabled = false;
+    printf("INTR: Disabled interrupt for timer %"PRIu8" event %s\n", timer, timerInterruptNames[which]);
+  }
 }
 
 void host_timer_set_compare(uint8_t timer, uint8_t channel, uint32_t value) {

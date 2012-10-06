@@ -16,7 +16,7 @@
  * NOTE: the original usage intent for this HAL was debugging of existing grbl
  *       code and iterative testing and refining of new features before
  *       attempting to run them on the actual MCU hardware. As such, it consists
- *       mainly of mockups and debug print statements tailored to give you an
+ *       mainly of mock-ups and debug print statements tailored to give you an
  *       insight into how grbl operates. It was not intended for running grbl
  *       on the host for production tasks (i.e. driving an actual CNC), at the
  *       very least because the host OS is not real-time.

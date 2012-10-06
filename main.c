@@ -103,7 +103,6 @@ int main(int argc, char **argv) {
       // TODO: Install G20/G21 unit default into settings and load appropriate settings.
     }
 
-    execute_runtime();
     protocol_process(); // ... process the serial protocol
 
   }

@@ -37,34 +37,26 @@ static char line[LINE_BUFFER_SIZE]; // Line to be executed. Zero-terminated.
 static uint8_t char_counter; // Last character counter in line variable.
 static uint8_t iscomment; // Comment/block delete flag for processor to ignore comment characters.
 
-static void status_message(int status_code) 
-{
-  if (status_code == 0) {
-    host_serialconsole_printmessage(_S("ok\r\n"), true);
-  } else {
+static void status_message(int status_code) {
+  if(!status_code) host_serialconsole_printmessage(_S("ok\r\n"), true);
+  else {
     host_serialconsole_printmessage(_S("error: "), true);
     switch(status_code) {          
-      case STATUS_BAD_NUMBER_FORMAT:
-      host_serialconsole_printmessage(_S("Bad number format\r\n"), true); break;
-      case STATUS_EXPECTED_COMMAND_LETTER:
-      host_serialconsole_printmessage(_S("Expected command letter\r\n"), true); break;
-      case STATUS_UNSUPPORTED_STATEMENT:
-      host_serialconsole_printmessage(_S("Unsupported statement\r\n"), true); break;
-      case STATUS_FLOATING_POINT_ERROR:
-      host_serialconsole_printmessage(_S("Floating point error\r\n"), true); break;
-      case STATUS_MODAL_GROUP_VIOLATION:
-      host_serialconsole_printmessage(_S("Modal group violation\r\n"), true); break;
-      case STATUS_INVALID_COMMAND:
-      host_serialconsole_printmessage(_S("Invalid command\r\n"), true); break;
+      case STATUS_BAD_NUMBER_FORMAT: host_serialconsole_printmessage(_S("Bad number format\r\n"), true); break;
+      case STATUS_EXPECTED_COMMAND_LETTER: host_serialconsole_printmessage(_S("Expected command letter\r\n"), true); break;
+      case STATUS_UNSUPPORTED_STATEMENT: host_serialconsole_printmessage(_S("Unsupported statement\r\n"), true); break;
+      case STATUS_FLOATING_POINT_ERROR: host_serialconsole_printmessage(_S("Floating point error\r\n"), true); break;
+      case STATUS_MODAL_GROUP_VIOLATION: host_serialconsole_printmessage(_S("Modal group violation\r\n"), true); break;
+      case STATUS_INVALID_COMMAND: host_serialconsole_printmessage(_S("Invalid command\r\n"), true); break;
       default:
-      host_serialconsole_printinteger(status_code, true);
-      host_serialconsole_printmessage(_S("\r\n"), true);
+       host_serialconsole_printinteger(status_code, true);
+       host_serialconsole_printmessage(_S("\r\n"), true);
+       break;
     }
   }
 }
 
-void protocol_init() 
-{
+void protocol_init() {
   // Print grbl initialization message
   host_serialconsole_printmessage(_S("\r\nGrbl " GRBL_VERSION), true);
   host_serialconsole_printmessage(_S("\r\n'$' to dump current settings\r\n"), true);
@@ -75,10 +67,8 @@ void protocol_init()
 
 
 // Executes one line of input according to protocol
-uint8_t protocol_execute_line(char *line) 
-{     
+uint8_t protocol_execute_line(char *line) {
   if(line[0] == '$') {
-  
     // TODO: Re-write this '$' as a way to change runtime settings without having to reset, i.e.
     // auto-starting, status query output formatting and type, jog mode (axes, direction, and
     // nominal feedrate), toggle block delete, etc. This differs from the EEPROM settings, as they
@@ -105,26 +95,22 @@ uint8_t protocol_execute_line(char *line)
   // block buffer without having the planner plan them. It would need to manage de/ac-celerations 
   // on its own carefully. This approach could be effective and possibly size/memory efficient.
 
-  } else {
-    return(gc_execute_line(line));    // Everything else is gcode
-  }
+  } else return(gc_execute_line(line));    // Everything else is gcode
 }
 
 
 // Process one line of incoming serial data. Remove unneeded characters and capitalize.
-void protocol_process()
-{
+void protocol_process() {
   uint8_t c;
   while((c = host_serialconsole_read()) != CONSOLE_NO_DATA) {
     if ((c == '\n') || (c == '\r')) { // End of line reached
-
       // Runtime command check point before executing line. Prevent any further line executions.
       // NOTE: If there is no line, this function should quickly return to the main program when
       // the buffer empties of non-executable data.
       execute_runtime();
-      if (sys.abort) { return; } // Bail to main program upon system abort    
+      if(sys.abort) return; // Bail to main program upon system abort
 
-      if (char_counter > 0) {// Line is complete. Then execute!
+      if(char_counter > 0) {// Line is complete. Then execute!
         line[char_counter] = 0; // Terminate string
         status_message(protocol_execute_line(line));
       } else { 
@@ -133,29 +119,28 @@ void protocol_process()
       }
       char_counter = 0; // Reset line buffer index
       iscomment = false; // Reset comment flag
-      
     } else {
-      if (iscomment) {
+      if(iscomment) {
         // Throw away all comment characters
-        if (c == ')') {
+        if(c == ')') {
           // End of comment. Resume line.
           iscomment = false;
         }
       } else {
-        if (c <= ' ') { 
+        if(c <= ' ') {
           // Throw away whitepace and control characters
-        } else if (c == '/') {
+        } else if(c == '/') {
           // Disable block delete and throw away characters. Will ignore until EOL.
           #if BLOCK_DELETE_ENABLE
             iscomment = true;
           #endif
-        } else if (c == '(') {
+        } else if(c == '(') {
           // Enable comments flag and ignore all characters until ')' or EOL.
           iscomment = true;
-        } else if (char_counter >= LINE_BUFFER_SIZE-1) {
+        } else if(char_counter >= LINE_BUFFER_SIZE - 1) {
           // Throw away any characters beyond the end of the line buffer
-        } else if (c >= 'a' && c <= 'z') { // Upcase lowercase
-          line[char_counter++] = c-'a'+'A';
+        } else if(c >= 'a' && c <= 'z') { // Upcase lowercase
+          line[char_counter++] = c - 'a'+'A';
         } else {
           line[char_counter++] = c;
         }

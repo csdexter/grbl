@@ -93,7 +93,7 @@ static parser_state_t gc;
 
 #define FAIL(status) gc.status_code = status;
 
-static int next_statement(char *letter, float *float_ptr, char *line, uint8_t *char_counter);
+static bool next_statement(char *letter, float *float_ptr, char *line, uint8_t *char_counter);
 
 static void select_plane(uint8_t axis_0, uint8_t axis_1, uint8_t axis_2) 
 {
@@ -245,7 +245,7 @@ uint8_t gc_execute_line(char *line)
   } 
 
   // If there were any errors parsing this line, we will return right away with the bad news
-  if (gc.status_code) { return(gc.status_code); }
+  if (gc.status_code) return(gc.status_code);
   
   /* Pass 2: Parameters. All units converted according to current block commands. Position 
      parameters are converted and flagged to indicate a change. These can have multiple connotations
@@ -256,30 +256,21 @@ uint8_t gc_execute_line(char *line)
   while(next_statement(&letter, &value, line, &char_counter)) {
     switch(letter) {
       case 'F': 
-        if (value <= 0) { FAIL(STATUS_INVALID_COMMAND); } // Must be greater than zero
-        if (gc.inverse_feed_rate_mode) {
-          inverse_feed_rate = to_millimeters(value); // seconds per motion for this motion only
-        } else {          
-          gc.feed_rate = to_millimeters(value); // millimeters per minute
-        }
+        if(value <= 0) FAIL(STATUS_INVALID_COMMAND); // Must be greater than zero
+        if(gc.inverse_feed_rate_mode) inverse_feed_rate = to_millimeters(value); // seconds per motion for this motion only
+        else gc.feed_rate = to_millimeters(value); // millimeters per minute
         break;
-      case 'I': case 'J': case 'K': offset[letter-'I'] = to_millimeters(value); break;
+      case 'I': case 'J': case 'K': offset[letter - 'I'] = to_millimeters(value); break;
       case 'L': l = trunc(value); break;
       case 'P': p = value; break;                    
       case 'R': r = to_millimeters(value); break;
       case 'S': 
-        if (value < 0) { FAIL(STATUS_INVALID_COMMAND); } // Cannot be negative
+        if(value < 0) FAIL(STATUS_INVALID_COMMAND); // Cannot be negative
         // We have no support for spindle speed control for now, why waste RAM?
-        #if 0
-          gc.spindle_speed = value;
-        #endif
         break;
       case 'T': 
-        if (value < 0) { FAIL(STATUS_INVALID_COMMAND); } // Cannot be negative
+        if(value < 0) FAIL(STATUS_INVALID_COMMAND); // Cannot be negative
         // We have no support for tool management for now, why waste RAM?
-        #if 0
-          gc.tool = trunc(value);
-        #endif
         break;
       case 'X': target[X_AXIS] = to_millimeters(value); bit_true(axis_words,bit(X_AXIS)); break;
       case 'Y': target[Y_AXIS] = to_millimeters(value); bit_true(axis_words,bit(Y_AXIS)); break;
@@ -288,7 +279,7 @@ uint8_t gc_execute_line(char *line)
   }
   
   // If there were any errors parsing this line, we will return right away with the bad news
-  if (gc.status_code) { return(gc.status_code); }
+  if(gc.status_code) return(gc.status_code);
   
   
   /* Execute Commands: Perform by order of execution defined in NIST RS274-NGC.v3, Table 8, pg.41.
@@ -306,7 +297,7 @@ uint8_t gc_execute_line(char *line)
   // [G4,G10,G28,G30,G92,G92.1]: Perform dwell, set coordinate system data, homing, or set axis offsets.
   // NOTE: These commands are in the same modal group, hence are mutually exclusive. G53 is in this
   // modal group and do not effect these actions.
-  switch (non_modal_action) {
+  switch(non_modal_action) {
     case NON_MODAL_DWELL:
       if (p < 0) { // Time cannot be negative.
         FAIL(STATUS_INVALID_COMMAND); 
@@ -389,7 +380,7 @@ uint8_t gc_execute_line(char *line)
       FAIL(STATUS_INVALID_COMMAND);
     }
     // Report any errors.  
-    if (gc.status_code) { return(gc.status_code); }
+    if (gc.status_code) return(gc.status_code);
 
     // Convert all target position data to machine coordinates for executing motion. Apply
     // absolute mode coordinate offsets or incremental mode offsets.
@@ -563,23 +554,21 @@ uint8_t gc_execute_line(char *line)
 // Parses the next statement and leaves the counter on the first character following
 // the statement. Returns 1 if there was a statements, 0 if end of string was reached
 // or there was an error (check state.status_code).
-static int next_statement(char *letter, float *float_ptr, char *line, uint8_t *char_counter) 
-{
-  if (line[*char_counter] == 0) {
-    return(0); // No more statements
-  }
+static bool next_statement(char *letter, float *float_ptr, char *line, uint8_t *char_counter) {
+  if(!line[*char_counter]) return false; // No more statements
   
   *letter = line[*char_counter];
   if((*letter < 'A') || (*letter > 'Z')) {
     FAIL(STATUS_EXPECTED_COMMAND_LETTER);
-    return(0);
+    return false;
   }
   (*char_counter)++;
-  if (!read_float(line, char_counter, float_ptr)) {
+  if(!read_float(line, char_counter, float_ptr)) {
     FAIL(STATUS_BAD_NUMBER_FORMAT); 
-    return(0);
-  };
-  return(1);
+    return false;
+  }
+
+  return true;
 }
 
 /* 
