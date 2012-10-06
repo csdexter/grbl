@@ -22,7 +22,10 @@
 #ifndef stepper_h
 #define stepper_h 
 
+#include <stdint.h>
+
 #include "nuts_bolts.h"
+
 
 typedef union {
   struct {

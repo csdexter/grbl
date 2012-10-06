@@ -31,5 +31,10 @@ typedef struct {
   uint32_t min_safe_rate;                // Minimum safe rate for full deceleration rate reduction step, otherwise halves step_rate.
 } stepper_t;
 
+// Local functions
+static void set_step_events_per_minute(uint32_t steps_per_minute);
+static void st_wake_up(void);
+static uint8_t iterate_trapezoid_cycle_counter(void);
+
 
 #endif /* STEPPER_PRIVATE_H_ */
