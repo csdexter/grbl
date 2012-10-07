@@ -24,8 +24,8 @@
 
 static const char *gpioNames[] = {
   "NONE/ERROR",
-  "Y_STEP",
   "X_STEP",
+  "Y_STEP",
   "Z_STEP",
   "X_DIR",
   "Y_DIR",
@@ -143,7 +143,64 @@ static int _i386_compare_interrupts(const void *a, const void *b) {
 }
 
 static void _i386_do_interrupt_work(void) {
-  //TODO: Stub, add flesh ;-)
+  uint8_t i;
+  bool atLeastOne;
+  TInterruptDescriptor *intVector;
+
+  do {
+    atLeastOne = false;
+    //TODO: one sunny day when I'll have no other excuse to waste time, implement
+    //      true causality here (i.e. if, judging by prescaler and count values,
+    //      e.g. T1_A_V would fire before e.g. T2_O_V, then make sure T1_A_V is
+    //      called first)
+    //TODO: stdin is line-buffered, even if we read it via fgetc() so it makes
+    //      sense to loop until all timer interrupt work has been exhausted and
+    //      only then return to the code. This also makes things like counting
+    //      GPIO pulses easier.
+    for(i = 0; i < sizeof(timers) / sizeof(timers[0]); i++) {
+      if(timers[i].prescaler) { //Is this one actually running?
+        intVector = _i386_timer_interrupt_by_type(i, EVENT_TIMER_OVERFLOW);
+        if(intVector && intVector->enabled && intVector->vector) {
+          printf("CTTM: %s condition on timer %d, executing interrupt vector\n",
+              timerInterruptNames[EVENT_TIMER_OVERFLOW], i);
+          timers[i].count = 0; //Simulate overflow
+          interruptsEnabled = false;
+          printf("INTR: Interrupts are now globally disabled\n");
+          intVector->vector();
+          printf("CTTM: return from %s condition interrupt vector of timer %d\n",
+              timerInterruptNames[EVENT_TIMER_OVERFLOW], i);
+          host_sei();
+          atLeastOne = true;
+        }
+        intVector = _i386_timer_interrupt_by_type(i, EVENT_TIMER_COMPARE_A);
+        if(intVector && intVector->enabled && intVector->vector) {
+          printf("CTTM: %s condition on timer %d, executing interrupt vector\n",
+              timerInterruptNames[EVENT_TIMER_COMPARE_A], i);
+          timers[i].count = timers[i].channel[0]; //Simulate channel A match
+          interruptsEnabled = false;
+          printf("INTR: Interrupts are now globally disabled\n");
+          intVector->vector();
+          printf("CTTM: return from %s condition interrupt vector of timer %d\n",
+              timerInterruptNames[EVENT_TIMER_COMPARE_A], i);
+          host_sei();
+          atLeastOne = true;
+        }
+        intVector = _i386_timer_interrupt_by_type(i, EVENT_TIMER_COMPARE_B);
+        if(intVector && intVector->enabled && intVector->vector) {
+          printf("CTTM: %s condition on timer %d, executing interrupt vector\n",
+              timerInterruptNames[EVENT_TIMER_COMPARE_B], i);
+          timers[i].count = timers[i].channel[1]; //Simulate channel B match
+          interruptsEnabled = false;
+          printf("INTR: Interrupts are now globally disabled\n");
+          intVector->vector();
+          printf("CTTM: return from %s condition interrupt vector of timer %d\n",
+              timerInterruptNames[EVENT_TIMER_COMPARE_B], i);
+          host_sei();
+          atLeastOne = true;
+        }
+      }
+    }
+  } while(atLeastOne);
 }
 
 static TInterruptDescriptor *_i386_interrupt_by_name(const char *name) {
@@ -326,13 +383,15 @@ void i386_timer_disable_interrupt(uint8_t timer, uint8_t which) {
 }
 
 void host_timer_set_compare(uint8_t timer, uint8_t channel, uint32_t value) {
-  if(!timers[timer].wide) value %= 0x100U; // Wrap around
+  if(timers[timer].wide) value &= 0xFFFF; // Wrap around
+  else value &= 0xFF;
   timers[timer].channel[channel - HOST_TIMER_CHANNEL_A] = value;
   printf("CTTM: Set counter/timer %"PRIu8" %s value to %"PRIu32"\n", timer, timerInterruptNames[channel], value);
 }
 
 void host_timer_set_count(uint8_t timer, uint32_t count) {
-  if(!timers[timer].wide) count %= 0x100U; // Wrap around
+  if(timers[timer].wide) count &= 0xFFFF; // Wrap around
+  else count &= 0xFF;
   timers[timer].count = count;
   printf("CTTM: Set counter/timer %"PRIu8" count value to %"PRIu32"\n", timer, count);
 }
@@ -340,7 +399,7 @@ void host_timer_set_count(uint8_t timer, uint32_t count) {
 void host_timer_set_prescaler(uint8_t timer, uint8_t prescaler) {
   timers[timer].prescaler = prescaler;
   if(prescaler)
-    printf("CTTM: Set counter/timer %"PRIu8" prescaler/divisor to %"PRIu8"\n", timer, prescaler);
+    printf("CTTM: Set counter/timer %"PRIu8" divisor to %"PRIu8" resulting in %luHz clock\n", timer, prescaler, HOST_TIMER_FOSC / prescaler);
   else printf("CTTM: Set counter/timer %"PRIu8" to no prescaler (i.e. stopped)\n", timer);
 }
 
