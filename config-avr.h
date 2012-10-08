@@ -54,7 +54,7 @@
 // cannot lock the steppers if we have no control over their active status.
 //TODO: whenever we will support axis brakes/clamps, update the above notice
 // NOTE: on some stepper drivers/controllers, the Enable/Disable line may reset
-// state of the driver chips which means the motors will advance to the next
+// the state of the driver chips which means the motors will advance to the next
 // full step the next time they're enabled (i.e. microstepping state is lost)
 // -- you may not want to use it if that is the case.
 //#define STEPPERS_DISABLE HOST_GPIO_PB0 // Uno Digital Pin 8

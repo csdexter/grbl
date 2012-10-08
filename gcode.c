@@ -111,24 +111,21 @@ void gc_init()
 }
 
 // Sets g-code parser position in mm. Input in steps. Called by the system abort routine.
-void gc_set_current_position(int32_t x, int32_t y, int32_t z) 
-{
-  gc.position[X_AXIS] = x/settings.steps_per_mm[X_AXIS];
-  gc.position[Y_AXIS] = y/settings.steps_per_mm[Y_AXIS];
-  gc.position[Z_AXIS] = z/settings.steps_per_mm[Z_AXIS]; 
+void gc_set_current_position(int32_t x, int32_t y, int32_t z) {
+  gc.position[X_AXIS] = x / settings.steps_per_mm[X_AXIS];
+  gc.position[Y_AXIS] = y / settings.steps_per_mm[Y_AXIS];
+  gc.position[Z_AXIS] = z / settings.steps_per_mm[Z_AXIS];
 }
 
-static float to_millimeters(float value) 
-{
-  return(gc.inches_mode ? (value * MM_PER_INCH) : value);
+static float to_millimeters(float value) {
+  return (gc.inches_mode ? (value * MM_PER_INCH) : value);
 }
 
 // Executes one line of 0-terminated G-Code. The line is assumed to contain only uppercase
 // characters and signed floating point values (no whitespace). Comments and block delete
 // characters have been removed. All units and positions are converted and exported to grbl's
 // internal functions in terms of (mm, mm/min) and absolute machine coordinates, respectively.
-uint8_t gc_execute_line(char *line) 
-{
+uint8_t gc_execute_line(char *line) {
   uint8_t char_counter = 0;  
   char letter;
   float value;
@@ -255,6 +252,9 @@ uint8_t gc_execute_line(char *line)
   char_counter = 0;
   while(next_statement(&letter, &value, line, &char_counter)) {
     switch(letter) {
+      case 'G':
+      case 'M':
+        break; // Ignore command statements
       case 'F': 
         if(value <= 0) FAIL(STATUS_INVALID_COMMAND); // Must be greater than zero
         if(gc.inverse_feed_rate_mode) inverse_feed_rate = to_millimeters(value); // seconds per motion for this motion only
@@ -275,6 +275,7 @@ uint8_t gc_execute_line(char *line)
       case 'X': target[X_AXIS] = to_millimeters(value); bit_true(axis_words,bit(X_AXIS)); break;
       case 'Y': target[Y_AXIS] = to_millimeters(value); bit_true(axis_words,bit(Y_AXIS)); break;
       case 'Z': target[Z_AXIS] = to_millimeters(value); bit_true(axis_words,bit(Z_AXIS)); break;
+      default: FAIL(STATUS_UNSUPPORTED_STATEMENT); break;
     }
   }
   
@@ -324,24 +325,17 @@ uint8_t gc_execute_line(char *line)
     case NON_MODAL_GO_HOME: 
       // Move to intermediate position before going home. Obeys current coordinate system and offsets 
       // and absolute and incremental modes.
-      if (axis_words) {
+      if(axis_words) {
         // Apply absolute mode coordinate offsets or incremental mode offsets.
         uint8_t i;
-        for (i=0; i<=2; i++) { // Axes indices are consistent, so loop may be used.
-          if ( bit_istrue(axis_words,bit(i)) ) {
-            if (gc.absolute_mode) {
-              target[i] += sys.coord_system[sys.coord_select][i] + sys.coord_offset[i];
-            } else {
-              target[i] += gc.position[i];
-            }
-          } else {
-            target[i] = gc.position[i];
-          }
-        }
+        for(i = 0; i <= 2; i++) // Axes indices are consistent, so loop may be used.
+          if(bit_istrue(axis_words,bit(i)))
+            if(gc.absolute_mode) target[i] += sys.coord_system[sys.coord_select][i] + sys.coord_offset[i];
+            else target[i] += gc.position[i];
+          else target[i] = gc.position[i];
         mc_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], settings.default_seek_rate, false);
       }
       mc_go_home(); 
-      clear_vector(gc.position); // Assumes home is at [0,0,0]
       axis_words = 0; // Axis words used. Lock out from motion modes by clearing flags.
       break;      
     case NON_MODAL_SET_COORDINATE_OFFSET:
