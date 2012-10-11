@@ -53,7 +53,7 @@
 bool read_float(char *line, uint8_t *char_counter, float *float_ptr) {
   char *ptr = line + *char_counter;
   unsigned char c;
-  bool isNegative, seenDecimalPoint = false;
+  bool isNegative = false, seenDecimalPoint = false;
   uint32_t intval = 0;
   int8_t exp = 0;
   uint8_t nDigits = 0;
