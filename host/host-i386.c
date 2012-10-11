@@ -18,7 +18,6 @@
 #include <signal.h>
 #include <time.h>
 
-
 #include "host.h"
 #include "host-i386-private.h"
 
@@ -155,74 +154,71 @@ static int _i386_compare_interrupts(const void *a, const void *b) {
 }
 
 static int _i386_compare_timer_events(const void *a, const void *b) {
-  return ((const TTimerEventSpec *)a)->remaining -
-      ((const TTimerEventSpec *)b)->remaining;
+  uint32_t av = ((const TTimerEventSpec *)a)->remaining;
+  uint32_t bv = ((const TTimerEventSpec *)b)->remaining;
+
+  if(av > bv) return 1;
+  else if(av < bv) return -1;
+  else return 0;
+}
+
+static bool _i386_advance_timer(uint8_t timer, uint8_t event) {
+  TInterruptDescriptor *intptr;
+
+  intptr = _i386_timer_interrupt_by_type(timer, event);
+  if(intptr && intptr->enabled && intptr->vector) {
+    switch(event) {
+      case EVENT_TIMER_OVERFLOW:
+        timerEvents[timer * sizeof(timers) / sizeof(timers[0]) + event - 1].remaining =
+            timerProperties[timer].compareMax - timers[timer].count;
+        break;
+      case EVENT_TIMER_COMPARE_A:
+        timerEvents[timer * sizeof(timers) / sizeof(timers[0]) + event - 1].remaining =
+            timers[timer].channel[0] - timers[timer].count;
+        break;
+      case EVENT_TIMER_COMPARE_B:
+        timerEvents[timer * sizeof(timers) / sizeof(timers[0]) + event - 1].remaining =
+            timers[timer].channel[1] - timers[timer].count;
+        break;
+    }
+    if(timers[timer].wide)
+      timerEvents[timer * sizeof(timers) / sizeof(timers[0]) + event - 1].remaining &=
+          0xFFFF;
+    else
+      timerEvents[timer * sizeof(timers) / sizeof(timers[0]) + event - 1].remaining &=
+          0xFF;
+    timerEvents[timer * sizeof(timers) / sizeof(timers[0]) + event - 1].remaining *=
+        timers[timer].prescaler;
+    timerEvents[timer * sizeof(timers) / sizeof(timers[0]) + event - 1].vector =
+        intptr->vector;
+    timerEvents[timer * sizeof(timers) / sizeof(timers[0]) + event - 1].timer = timer;
+    timerEvents[timer * sizeof(timers) / sizeof(timers[0]) + event - 1].event = event;
+
+    return true;
+  } else {
+    timerEvents[timer * sizeof(timers) / sizeof(timers[0]) + event - 1].remaining =
+        0xFFFFFFFFUL;
+
+    return false;
+  }
 }
 
 static bool _i386_update_event_list(void) {
   bool atLeastOne = false;
   uint8_t i;
-  TInterruptDescriptor *intptr;
 
   for(i = 0; i < sizeof(timers) / sizeof(timers[0]); i++)
     if(timers[i].prescaler) { // Is this one actually running?
-      intptr = _i386_timer_interrupt_by_type(i, EVENT_TIMER_OVERFLOW);
-      if(intptr && intptr->enabled && intptr->vector) {
-        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 0].remaining =
-            timerProperties[i].compareMax - timers[i].count - 1;
-        if(!timers[i].wide)
-          timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 0].remaining &=
-              0xFF;
-        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 0].vector =
-            intptr->vector;
-        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 0].timer = i;
-        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 0].event =
-            EVENT_TIMER_OVERFLOW;
-        atLeastOne = true;
-      } else
-        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 0].remaining =
-            0xFFFF;
-      intptr = _i386_timer_interrupt_by_type(i, EVENT_TIMER_COMPARE_A);
-      if(intptr && intptr->enabled && intptr->vector) {
-        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 1].remaining =
-            timers[i].channel[0] - timers[i].count - 1;
-        if(!timers[i].wide)
-          timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 1].remaining &=
-              0xFF;
-        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 1].vector =
-            intptr->vector;
-        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 1].timer = i;
-        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 1].event =
-            EVENT_TIMER_COMPARE_A;
-
-        atLeastOne = true;
-      } else
-        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 1].remaining =
-            0xFFFF;
-      intptr = _i386_timer_interrupt_by_type(i, EVENT_TIMER_COMPARE_B);
-      if(intptr && intptr->enabled && intptr->vector) {
-        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 2].remaining =
-            timers[i].channel[1] - timers[i].count - 1;
-        if(!timers[i].wide)
-          timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 2].remaining &=
-              0xFF;
-        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 2].vector =
-            intptr->vector;
-        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 2].timer = i;
-        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 2].event =
-            EVENT_TIMER_COMPARE_B;
-
-        atLeastOne = true;
-      } else
-        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 2].remaining =
-            0xFFFF;
+      atLeastOne |= _i386_advance_timer(i, EVENT_TIMER_OVERFLOW);
+      atLeastOne |= _i386_advance_timer(i, EVENT_TIMER_COMPARE_A);
+      atLeastOne |= _i386_advance_timer(i, EVENT_TIMER_COMPARE_B);
     } else {
       timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 0].remaining =
-            0xFFFF;
+            0xFFFFFFFFUL;
       timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 1].remaining =
-            0xFFFF;
+            0xFFFFFFFFUL;
       timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 2].remaining =
-            0xFFFF;
+            0xFFFFFFFFUL;
     }
 
   qsort(timerEvents, sizeof(timerEvents) / sizeof(timerEvents[0]),
