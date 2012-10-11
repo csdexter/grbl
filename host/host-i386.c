@@ -73,6 +73,17 @@ static TTimerDescriptor timers[] = {
   {0x0000, {0x0000, 0x0000}, 0, true, TIMER_MODE_NORMAL},
   {0x00, {0x00, 0x00}, 0, false, TIMER_MODE_NORMAL}
 };
+static TTimerEventSpec timerEvents[] = {
+    {0x0000, 0, EVENT_TIMER_OVERFLOW, NULL},
+    {0x0000, 0, EVENT_TIMER_OVERFLOW, NULL},
+    {0x0000, 0, EVENT_TIMER_OVERFLOW, NULL},
+    {0x0000, 1, EVENT_TIMER_COMPARE_A, NULL},
+    {0x0000, 1, EVENT_TIMER_COMPARE_A, NULL},
+    {0x0000, 1, EVENT_TIMER_COMPARE_A, NULL},
+    {0x0000, 2, EVENT_TIMER_COMPARE_B, NULL},
+    {0x0000, 2, EVENT_TIMER_COMPARE_B, NULL},
+    {0x0000, 2, EVENT_TIMER_COMPARE_B, NULL}
+};
 
 
 void i386_delay_us(uint32_t us) {
@@ -139,68 +150,121 @@ void host_sei(void) {
 }
 
 static int _i386_compare_interrupts(const void *a, const void *b) {
-  return strcmp(((const TInterruptDescriptor *)a)->name, ((const TInterruptDescriptor *)b)->name);
+  return strcmp(((const TInterruptDescriptor *)a)->name,
+      ((const TInterruptDescriptor *)b)->name);
+}
+
+static int _i386_compare_timer_events(const void *a, const void *b) {
+  return ((const TTimerEventSpec *)a)->remaining -
+      ((const TTimerEventSpec *)b)->remaining;
+}
+
+static bool _i386_update_event_list(void) {
+  bool atLeastOne = false;
+  uint8_t i;
+  TInterruptDescriptor *intptr;
+
+  for(i = 0; i < sizeof(timers) / sizeof(timers[0]); i++)
+    if(timers[i].prescaler) { // Is this one actually running?
+      intptr = _i386_timer_interrupt_by_type(i, EVENT_TIMER_OVERFLOW);
+      if(intptr && intptr->enabled && intptr->vector) {
+        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 0].remaining =
+            timerProperties[i].compareMax - timers[i].count - 1;
+        if(!timers[i].wide)
+          timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 0].remaining &=
+              0xFF;
+        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 0].vector =
+            intptr->vector;
+        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 0].timer = i;
+        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 0].event =
+            EVENT_TIMER_OVERFLOW;
+        atLeastOne = true;
+      } else
+        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 0].remaining =
+            0xFFFF;
+      intptr = _i386_timer_interrupt_by_type(i, EVENT_TIMER_COMPARE_A);
+      if(intptr && intptr->enabled && intptr->vector) {
+        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 1].remaining =
+            timers[i].channel[0] - timers[i].count - 1;
+        if(!timers[i].wide)
+          timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 1].remaining &=
+              0xFF;
+        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 1].vector =
+            intptr->vector;
+        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 1].timer = i;
+        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 1].event =
+            EVENT_TIMER_COMPARE_A;
+
+        atLeastOne = true;
+      } else
+        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 1].remaining =
+            0xFFFF;
+      intptr = _i386_timer_interrupt_by_type(i, EVENT_TIMER_COMPARE_B);
+      if(intptr && intptr->enabled && intptr->vector) {
+        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 2].remaining =
+            timers[i].channel[1] - timers[i].count - 1;
+        if(!timers[i].wide)
+          timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 2].remaining &=
+              0xFF;
+        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 2].vector =
+            intptr->vector;
+        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 2].timer = i;
+        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 2].event =
+            EVENT_TIMER_COMPARE_B;
+
+        atLeastOne = true;
+      } else
+        timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 2].remaining =
+            0xFFFF;
+    } else {
+      timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 0].remaining =
+            0xFFFF;
+      timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 1].remaining =
+            0xFFFF;
+      timerEvents[i * sizeof(timers) / sizeof(timers[0]) + 2].remaining =
+            0xFFFF;
+    }
+
+  qsort(timerEvents, sizeof(timerEvents) / sizeof(timerEvents[0]),
+      sizeof(timerEvents[0]), _i386_compare_timer_events);
+
+  return atLeastOne;
 }
 
 static void _i386_do_interrupt_work(void) {
-  uint8_t i;
-  bool atLeastOne;
-  TInterruptDescriptor *intVector;
-
-  do {
-    atLeastOne = false;
-    //TODO: one sunny day when I'll have no other excuse to waste time, implement
-    //      true causality here (i.e. if, judging by prescaler and count values,
-    //      e.g. T1_A_V would fire before e.g. T2_O_V, then make sure T1_A_V is
-    //      called first)
-    //TODO: stdin is line-buffered, even if we read it via fgetc() so it makes
-    //      sense to loop until all timer interrupt work has been exhausted and
-    //      only then return to the code. This also makes things like counting
-    //      GPIO pulses easier.
-    for(i = 0; i < sizeof(timers) / sizeof(timers[0]); i++) {
-      if(timers[i].prescaler) { //Is this one actually running?
-        intVector = _i386_timer_interrupt_by_type(i, EVENT_TIMER_OVERFLOW);
-        if(intVector && intVector->enabled && intVector->vector) {
-          printf("CTTM: %s condition on timer %d, executing interrupt vector\n",
-              timerInterruptNames[EVENT_TIMER_OVERFLOW], i);
-          timers[i].count = 0; //Simulate overflow
-          interruptsEnabled = false;
-          printf("INTR: Interrupts are now globally disabled\n");
-          intVector->vector();
-          printf("CTTM: return from %s condition interrupt vector of timer %d\n",
-              timerInterruptNames[EVENT_TIMER_OVERFLOW], i);
-          host_sei();
-          atLeastOne = true;
-        }
-        intVector = _i386_timer_interrupt_by_type(i, EVENT_TIMER_COMPARE_A);
-        if(intVector && intVector->enabled && intVector->vector) {
-          printf("CTTM: %s condition on timer %d, executing interrupt vector\n",
-              timerInterruptNames[EVENT_TIMER_COMPARE_A], i);
-          timers[i].count = timers[i].channel[0]; //Simulate channel A match
-          interruptsEnabled = false;
-          printf("INTR: Interrupts are now globally disabled\n");
-          intVector->vector();
-          printf("CTTM: return from %s condition interrupt vector of timer %d\n",
-              timerInterruptNames[EVENT_TIMER_COMPARE_A], i);
-          host_sei();
-          atLeastOne = true;
-        }
-        intVector = _i386_timer_interrupt_by_type(i, EVENT_TIMER_COMPARE_B);
-        if(intVector && intVector->enabled && intVector->vector) {
-          printf("CTTM: %s condition on timer %d, executing interrupt vector\n",
-              timerInterruptNames[EVENT_TIMER_COMPARE_B], i);
-          timers[i].count = timers[i].channel[1]; //Simulate channel B match
-          interruptsEnabled = false;
-          printf("INTR: Interrupts are now globally disabled\n");
-          intVector->vector();
-          printf("CTTM: return from %s condition interrupt vector of timer %d\n",
-              timerInterruptNames[EVENT_TIMER_COMPARE_B], i);
-          host_sei();
-          atLeastOne = true;
-        }
-      }
+  //NOTE: stdin is line-buffered, even if we read it via fgetc(), so it makes
+  //      sense to loop until all timer interrupt work has been exhausted and
+  //      only then return to the code. This also makes things like counting
+  //      GPIO pulses easier.
+  //TODO: if we ever want to debug the planner, we would need a means to allow
+  //      the move buffer to become full and only *then* start issuing
+  //      interrupts.
+  while(_i386_update_event_list()) {
+    printf("CTTM: %s condition on timer %d, executing interrupt vector\n",
+    timerInterruptNames[timerEvents[0].event], timerEvents[0].timer);
+    switch(timerEvents[0].event) {
+      case EVENT_TIMER_OVERFLOW:
+        // The interrupt alone takes 4 cycles which means that, in the worst
+        // case, the timer value you were interrupted for will be at least 4
+        // units behind you when you enter the ISR.
+        timers[timerEvents[0].timer].count = 0 + 1;
+        break;
+      case EVENT_TIMER_COMPARE_A:
+        timers[timerEvents[0].timer].count =
+            timers[timerEvents[0].timer].channel[0] + 1;
+        break;
+      case EVENT_TIMER_COMPARE_B:
+        timers[timerEvents[0].timer].count =
+            timers[timerEvents[0].timer].channel[1] + 1;
+        break;
     }
-  } while(atLeastOne);
+    interruptsEnabled = false;
+    printf("INTR: Interrupts are now globally disabled\n");
+    timerEvents[0].vector();
+    printf("CTTM: return from %s condition interrupt vector of timer %d\n",
+        timerInterruptNames[timerEvents[0].event], timerEvents[0].timer);
+    host_sei();
+  }
 }
 
 static TInterruptDescriptor *_i386_interrupt_by_name(const char *name) {

@@ -43,8 +43,17 @@ typedef struct {
   uint8_t mode;
 } TTimerDescriptor;
 
+typedef struct {
+  uint16_t remaining;
+  uint8_t timer;
+  uint8_t event;
+  void(*vector)(void);
+} TTimerEventSpec;
+
 // Local functions
 static int _i386_compare_interrupts(const void *a, const void *b);
+static int _i386_compare_timer_events(const void *a, const void *b);
+static bool _i386_update_event_list(void);
 static void _i386_do_interrupt_work(void);
 static TInterruptDescriptor *_i386_interrupt_by_name(const char *name);
 static TInterruptDescriptor *_i386_timer_interrupt_by_type(uint8_t timer,

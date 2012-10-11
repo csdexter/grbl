@@ -26,7 +26,7 @@
 #include <stdint.h>
 
 
-#define GRBL_VERSION "0.8a"
+#define GRBL_VERSION "0.8b"
 
 #define SETTINGS_SIGNATURE 0x9561U
 
