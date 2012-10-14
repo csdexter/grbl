@@ -40,7 +40,7 @@ void host_delay_us(uint16_t us) {
   us <<= 1; // Faster than multiplying by 2
   us--;
 #else
-# error F_CPU undefined or not in {8, 16, 20}MHz
+# error F_CPU undefined or not in {8,16,20}MHz
 #endif
   _delay_loop_2(us);
 }

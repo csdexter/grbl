@@ -254,7 +254,8 @@ uint8_t gc_execute_line(char *line) {
     switch(letter) {
       case 'G':
       case 'M':
-        break; // Ignore command statements
+      case 'N':
+        break; // Ignore command statements and line numbers
       case 'F': 
         if(value <= 0) FAIL(STATUS_INVALID_COMMAND); // Must be greater than zero
         if(gc.inverse_feed_rate_mode) inverse_feed_rate = to_millimeters(value); // seconds per motion for this motion only

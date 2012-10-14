@@ -3,11 +3,7 @@
   Part of Grbl
 
   Copyright (c) 2009-2011 Simen Svale Skogsrud
-<<<<<<< HEAD
-  Copyright (c) 2011 Sungeun K. Jeon
-=======
   Copyright (c) 2011-2012 Sungeun K. Jeon
->>>>>>> edge
 
   Grbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -32,6 +28,9 @@
 #define STATUS_FLOATING_POINT_ERROR 4
 #define STATUS_MODAL_GROUP_VIOLATION 5
 #define STATUS_INVALID_COMMAND 6
+
+#define LINE_BUFFER_SIZE 50
+
 
 // Initialize the serial protocol
 void protocol_init();

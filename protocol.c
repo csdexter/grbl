@@ -31,8 +31,6 @@
 #include "settings.h"
 
 
-#define LINE_BUFFER_SIZE 50
-
 static char line[LINE_BUFFER_SIZE]; // Line to be executed. Zero-terminated.
 static uint8_t char_counter; // Last character counter in line variable.
 static uint8_t iscomment; // Comment/block delete flag for processor to ignore comment characters.
