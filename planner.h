@@ -24,15 +24,13 @@
                  
 #include <stdint.h>
 
+#include "stepper.h"
 
 // This struct is used when buffering the setup for each linear movement "nominal" values are as specified in 
 // the source g-code and may never actually be reached if acceleration management is active.
 typedef struct {
   // Fields used by the Bresenham algorithm for tracing the line
-  uint8_t dir_x:1;                    // The direction bit set for this block (refers to DIR_* in config.h)
-  uint8_t dir_y:1;
-  uint8_t dir_z:1;
-  uint8_t reserved:6;
+  stepper_output_t dir_bits;          // The direction bit set for this block (refers to DIR_* in config.h)
   uint32_t steps_x, steps_y, steps_z; // Step count along each axis
   int32_t step_event_count;           // The number of step events required to complete this block
 

@@ -360,10 +360,10 @@ void plan_buffer_line(float x, float y, float z, float feed_rate, uint8_t invert
   target[Z_AXIS] = lround(z*settings.steps_per_mm[Z_AXIS]);     
 
   // Compute direction bits for this block
-  block->dir_x = block->dir_y = block->dir_z = false;
-  if(target[X_AXIS] < pl.position[X_AXIS]) block->dir_x = true;
-  if(target[Y_AXIS] < pl.position[Y_AXIS]) block->dir_y = true;
-  if(target[Z_AXIS] < pl.position[Z_AXIS]) block->dir_z = true;
+  block->dir_bits.value = 0x00;
+  if(target[X_AXIS] < pl.position[X_AXIS]) block->dir_bits.flags.dir_x = true;
+  if(target[Y_AXIS] < pl.position[Y_AXIS]) block->dir_bits.flags.dir_y = true;
+  if(target[Z_AXIS] < pl.position[Z_AXIS]) block->dir_bits.flags.dir_z = true;
   
   // Number of steps for each axis
   block->steps_x = labs(target[X_AXIS]-pl.position[X_AXIS]);
