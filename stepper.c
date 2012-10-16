@@ -178,6 +178,8 @@ HOST_INTERRUPT(host_timer_vector_name(1, HOST_TIMER_INTERRUPT_COMPARE_A)) {
   } 
 
   if(current_block != NULL) {
+    //TODO: add syntactic sugar to block_t to enable direct copy
+    out_bits.value = 0x00;
     // Execute step displacement profile by Bresenham's line algorithm
     out_bits.flags.dir_x = current_block->dir_x;
     out_bits.flags.dir_y = current_block->dir_y;
