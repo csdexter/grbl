@@ -147,7 +147,7 @@
 // hack/solution posted in the Wiki involving inverting the stepper pin mask.
 // NOTE: If set greater than zero, step pulse delay will be compiled and enabled. Also, the 
 // total delay added with the Grbl settings pulse microseconds must not exceed 127 ms.
-#define STEP_PULSE_DELAY 0 // Step pulse delay in microseconds. Default disabled.
+#define STEP_PULSE_DELAY 10 // Step pulse delay in microseconds. Default disabled.
 
 // ---------------------------------------------------------------------------------------
 

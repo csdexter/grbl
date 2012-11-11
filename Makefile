@@ -48,7 +48,8 @@ OBJDUMP = avr-objdump
 all:	grbl.hex
 
 .c.o:
-	$(COMPILE) -c $< -o $@ 
+	$(COMPILE) -c $< -o $@
+	@$(COMPILE) -MM $< > $*.d
 
 .S.o:
 	$(COMPILE) -x assembler-with-cpp -c $< -o $@
@@ -74,7 +75,7 @@ load: all
 	bootloadHID grbl.hex
 
 clean:
-	rm -f grbl.hex main.elf $(OBJECTS)
+	rm -f grbl.hex main.elf $(OBJECTS) $(OBJECTS:.o=.d)
 
 functionsbysize: $(OBJECTS)
 	@$(OBJDUMP) -h $^ | grep '\.text\.' | perl -ne '/\.text\.(\S+)\s+([0-9a-f]+)/ && printf "%u\t%s\n", eval("0x$$2"), $$1;' | sort -n
@@ -99,3 +100,6 @@ disasm:	main.elf
 
 cpp:
 	$(COMPILE) -E main.c 
+
+# Include generated header dependencies
+-include $(OBJECTS:.o=.d)

@@ -123,7 +123,12 @@ bool host_serialconsole_printfloat(float n, uint8_t precision, bool block) {
   return host_serialconsole_printstring(dtostrf(n, 0, precision, buf), block);
 }
 
-ISR(USART_UDRE_vect) {
+#ifdef __AVR_ATmega644P__
+ISR(USART0_UDRE_vect)
+#else
+ISR(USART_UDRE_vect)
+#endif
+{
   UDR0 = serialconsole_tx_buffer[serialconsole_tx_buffer_tail];
 
   if(++serialconsole_tx_buffer_tail == CONSOLE_TXBUF_SIZE)
@@ -132,7 +137,12 @@ ISR(USART_UDRE_vect) {
     UCSR0B &= ~_BV(UDRIE0);
 }
 
-ISR(USART_RX_vect) {
+#ifdef __AVR_ATmega644P__
+ISR(USART0_RX_vect)
+#else
+ISR(USART_RX_vect)
+#endif
+{
   /* Need to actually perform the read to clear "data received" status */
   char data = UDR0;
   uint8_t new_head = ((serialconsole_rx_buffer_head + 1) == CONSOLE_RXBUF_SIZE)

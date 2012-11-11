@@ -1,23 +1,31 @@
 * do away with hosting <==> i386 lameness, one or the other, not both!
 * spindle_control.c and coolant_control.c are identical, sacrifice readability for code size: genericize and merge
+- though this may become irrelevant as we do COOL/SPINDLE control outside the main MCU
 * un-lame limits.c (inject blocks instead of stepping by hand [with acceleration]) OR see below
+- upstream re-implemented a lite stepper.c in limits.c to drive the axes
 * extend stepper.c with hard limits support, this automatically makes limits.c sane (i.e. we can just ask for a X_travel + homing_threshold G00 in the right direction and tell the code we expect the endstop to trip -- instead of doing physics voodoo by injecting blocks and checking the endstop switch from limits.c)
-* remove obsolete TODOs
-* replace if (sys.abort) { return; } with a function or macro; also investigate if the "sprinkled calls" model should be maintained (process_runtime_command()).
+- upstream has gone the "stop the world" way for the limit switches
+* carefully carve out the last remains of the protocol/status report code and replace with compact protocol to be decoded by the streaming script
+- upstream has gone the verbose way and has conversational messages in grbl itself
 --
 * switch to better math (faster and smaller): use fixed point. Maybe copy stuff over from Teacup (like auto-scaling).
-* switch to better math (faster and smaller): use homebrewed routines for sin/cos/tan/hypot etc.
+* switch to better math (faster and smaller): use homebrew routines for sin/cos/tan/hypot etc.
 * use #defines for the math magic to seamlessly switch between floating point and fixed point on AVR and between VFP and NEON on ARM
 * audit globals and structs, there's just too many of them to be right
+* audit [runtime] settings: make sure only stuff that absolutely needs to be there is there
+* preliminary tests as part of the proving-ground project suggest Bresenham/DDA is just as good, we may be able to kiss trigonometry goodbye for good
+* remember that grbl needn't be a DRO in our case, so investigate doing all internal math in terms of steps -- one more opportunity to do away with floating point
 --
 * maybe get off Timer2 (just delay after setting the STEP lines), thus enabling SPINDLE_PWM coexistence
 * ... this is now possible using the algorithm in SLVA488, do implement that
 * maybe add SPINDLE_RPM stuff (PWM)
 * maybe add E_STOP stuff (freeze -- needs to be connected to EXEC_RESET)
-* maybe remember that this is a plotter, not a pixel display, and do way better arcs
-* if we get the one above right, maybe implement Bezier and NURBs :-)
+* maybe remember that this is a plotter, not a pixel display, and do way better arcs (see Bresenham comment above)
+* if we get the one above right, maybe implement Bezier and NURBs :-) (math and code is already there for at least Bresenham conic sections and Bresenham Beziers)
 * maybe implement exotic limits (midpoint switches, two-switch limits and configurable homing sequence)
+- upstream received a very nice comment about switch topology: use limit switches at both ends wired in parallel and a home/reference switch mid-travel. That way the axis can tell which way is left on boot and also covers both over and under travel.
 --
 * more G-code stuff from the canonical G-Code interpreter project
+* consider NVS (runtime settings) for G54-G59 and init script
 --
-* make a first attempt at splitting along the dotted line
+* split along the dotted line (add an intercom layer a la Teacup, move all stepping stuff to the stepper MCU image, move all control stuff to the interface MCU image)

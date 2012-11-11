@@ -471,10 +471,12 @@ uint8_t gc_execute_line(char *line) {
             float y = target[gc.plane_axis_1]-gc.position[gc.plane_axis_1];
             
             clear_vector(offset);
-            float h_x2_div_d = -sqrt(4 * r*r - x*x - y*y)/hypot(x,y); // == -(h * 2 / d)
-            // If r is smaller than d, the arc is now traversing the complex plane beyond the reach of any
-            // real CNC, and thus - for practical reasons - we will terminate promptly:
-            if(isnan(h_x2_div_d)) { FAIL(STATUS_FLOATING_POINT_ERROR); return(gc.status_code); }
+            // First, use h_x2_div_d to compute 4*h^2 to check if it is negative or r is smaller
+            // than d. If so, the sqrt of a negative number is complex and error out.
+            float h_x2_div_d = 4 * r*r - x*x - y*y;
+            if(h_x2_div_d < 0) { FAIL(STATUS_FLOATING_POINT_ERROR); return(gc.status_code); }
+            // Finish computing h_x2_div_d.
+            h_x2_div_d = -sqrt(h_x2_div_d)/hypot(x,y); // == -(h * 2 / d)
             // Invert the sign of h_x2_div_d if the circle is counter clockwise (see sketch below)
             if (gc.motion_mode == MOTION_MODE_CCW_ARC) { h_x2_div_d = -h_x2_div_d; }
             
