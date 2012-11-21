@@ -52,7 +52,7 @@ static char serialconsole_tx_buffer[CONSOLE_TXBUF_SIZE];
 static uint8_t serialconsole_tx_buffer_head = 0;
 static volatile uint8_t serialconsole_tx_buffer_tail = 0;
 
-void host_serialconsole_init(uint16_t baud) {
+void host_serialconsole_init(void) {
 #define BAUD CONSOLE_BAUD_RATE
 #include <util/setbaud.h>
 
@@ -68,7 +68,7 @@ void host_serialconsole_init(uint16_t baud) {
   UCSR0B |= _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
 }
 
-void host_serialconsole_reset() {
+void host_serialconsole_reset(void) {
   serialconsole_rx_buffer_tail = serialconsole_rx_buffer_head;
 }
 
